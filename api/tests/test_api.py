@@ -31,7 +31,7 @@ def test_tenant_isolation_and_investigation_survives_recheck(client):
     http, sessions, identity = client
     assert http.put('/api/pharmacies/current', json={"name":"A Pharmacy"}).status_code == 200
     with sessions() as db:
-        record = normalize_record({"product_name":"Linezolid Tablets IP 600mg","manufacturer":"Symbiosis Pharmaceuticals Pvt. Ltd.","batch_number":"TG261185","quality_issue":"Dissolution"}, "AUG-2026")
+        record = normalize_record({"product_name":"Linezolid Tablets IP 600mg","manufacturer":"Symbiosis Pharmaceuticals Pvt. Ltd.","batch_number":"TG261185","quality_issue":"Dissolution","reporting_period":"AUG-2026"}, "AUG-2026")
         db.add(Alert(**record, run_id="run-1"))
         db.commit()
     csv = b"medicine_name,manufacturer,batch_number,strength,expiry_date,quantity\nLinezolid Tablets IP 600mg,Symbiosis Pharmaceuticals Pvt Ltd,TG261185,600mg,2027-01-01,4\n"

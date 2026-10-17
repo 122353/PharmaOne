@@ -54,12 +54,16 @@ def test_matching_matrix(change, expected):
 
 def test_nsq_normalization_requires_source_identifiers():
     from app.tinyfish import normalize_record, fingerprint
-    record = normalize_record({"Name of Product":"Linezolid Tablets IP 600mg","Manufactured By":"Symbiosis Pharmaceuticals","Batch No":"TG261185","NSQ Result":"Dissolution"}, "AUG-2026")
+    record = normalize_record({"Name of Product":"Linezolid Tablets IP 600mg","Manufactured By":"Symbiosis Pharmaceuticals","Batch No":"TG261185","NSQ Result":"Dissolution","Reporting Month & Year":"AUG-2026"}, "AUG-2026")
     assert record["classification"] == "nsq"
     assert record["source_url"].startswith("https://cdscoonline.gov.in/")
     assert record["fingerprint"] == fingerprint(record)
     with pytest.raises(ValueError):
         normalize_record({"Name of Product":"Linezolid"}, "AUG-2026")
+    with pytest.raises(ValueError):
+        normalize_record({"Name of Product":"Linezolid","Batch No":"B1","Reporting Month & Year":"JUL-2026"}, "AUG-2026")
+    with pytest.raises(ValueError):
+        normalize_record({"Name of Product":"Linezolid","Batch No":"B1"}, "AUG-2026")
 
 
 def test_tinyfish_complete_event_extracts_result_json():
