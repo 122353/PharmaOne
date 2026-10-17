@@ -1,0 +1,76 @@
+/* Keep motion subtle and limited to elements that respond to interaction. */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.hero-copy .eyebrow,
+.hero-copy h1,
+.hero-copy p,
+.hero-buttons {
+  animation: rise-in 650ms cubic-bezier(.22, 1, .36, 1) both;
+}
+.landing-nav { animation: fade-in 650ms ease both; }
+.hero-copy .eyebrow { animation-delay: 90ms; }
+.hero-copy h1 { animation-delay: 150ms; }
+.hero-copy p { animation-delay: 220ms; }
+.hero-buttons { animation-delay: 290ms; }
+.scroll-cue { animation: fade-in 650ms ease 370ms both; }
+
+.landing-links a,
+.plain-link,
+.footer a,
+.text-link,
+.faq-list summary,
+.sidebar nav a {
+  transition: color 300ms ease, background-color 300ms ease;
+}
+.button,
+.nav-cta,
+.primary,
+.secondary {
+  transition: transform 340ms cubic-bezier(.22, 1, .36, 1),
+              background-color 300ms ease,
+              box-shadow 340ms ease;
+}
+.button:hover,
+.nav-cta:hover,
+.primary:hover,
+.secondary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px #0b37312b;
+}
+.button:active,
+.nav-cta:active,
+.primary:active,
+.secondary:active { transform: translateY(-1px); }
+
+.step-card,
+.bridge > div:not(.bridge-middle),
+.preview {
+  transition: transform 420ms cubic-bezier(.22, 1, .36, 1),
+              box-shadow 420ms ease,
+              border-color 420ms ease;
+}
+.step-card:hover,
+.bridge > div:not(.bridge-middle):hover {
+  transform: translateY(-5px);
+  border-color: #b9d8ca;
+  box-shadow: 0 17px 35px #164b3920;
+}
+.preview:hover { transform: rotate(0deg) translateY(-4px); }
+.faq-list details[open] p { animation: rise-in 340ms ease both; }
+.sidebar { transition: left 340ms cubic-bezier(.22, 1, .36, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0s !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0s !important;
+  }
+}
