@@ -44,6 +44,7 @@ def test_auth_required_for_private_api():
     ({"batch_number":"TG-261185"}, "no_identified_match"),
     ({"medicine_name":""}, "no_identified_match"),
     ({"manufacturer":"Symbiosis Pharmaceuticals"}, "potential_match"),
+    ({"manufacturer":"Pharmaceuticals"}, "needs_verification"),
     ({"batch_number":"tg261185"}, "potential_match"),
 ])
 def test_matching_matrix(change, expected):

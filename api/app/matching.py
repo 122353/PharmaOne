@@ -12,10 +12,14 @@ def batch(value: str | None) -> str:
     return re.sub(r"\s+", "", unicodedata.normalize("NFKC", value or "")).upper()
 
 
+def manufacturer_words(value: str | None) -> set[str]:
+    return words(value) - {"pharma", "pharmaceuticals", "healthcare", "laboratories", "labs", "industries", "company", "co", "inc"}
+
+
 def compare(item: dict, alert: dict) -> tuple[str, dict]:
     product_a, product_b = words(item.get("medicine_name")), words(alert.get("product_name"))
     batch_a, batch_b = batch(item.get("batch_number")), batch(alert.get("batch_number"))
-    maker_a, maker_b = words(item.get("manufacturer")), words(alert.get("manufacturer"))
+    maker_a, maker_b = manufacturer_words(item.get("manufacturer")), manufacturer_words(alert.get("manufacturer"))
     product_overlap = bool(product_a and product_b and (product_a == product_b or len(product_a & product_b) / max(len(product_a), len(product_b)) >= .75))
     evidence = {
         "product": {"inventory": item.get("medicine_name"), "source": alert.get("product_name"), "aligned": product_overlap},

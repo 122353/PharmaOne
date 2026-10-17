@@ -6,8 +6,10 @@ Source-backed CDSCO NSQ review for pharmacy batch inventory. The application is 
 
 - Backend API, PostgreSQL data model, Supabase JWT verification, CSV import, deterministic matching, investigation audit records, encrypted TinyFish BYOK, and TinyFish browser-agent adapter are implemented.
 - Web landing, auth, onboarding, import, dashboard, alerts, detail, investigations, inventory correction and settings are implemented.
-- Live CDSCO ingestion requires a user-owned TinyFish key and an explicit sync. The API contract and SSE parser are implemented and unit tested, but a live paid run has not been exercised. No live records are bundled or silently fabricated.
+- One TinyFish connector run retrieved five real August 2026 CDSCO rows and an independent browser check matched all 30 compared fields. Its verified snapshot is in `evidence/` and was imported into the current ignored local SQLite database. The app's own per-user BYOK sync endpoint still awaits a configured account and live verification; no source records are silently fabricated.
 - Supabase Auth and a PostgreSQL service must be configured to exercise the complete signed-in flow. The current local integration tests use SQLite; PostgreSQL behavior has not yet been verified because the local Docker daemon was unavailable.
+
+For the current verification status, secure beginner setup, and a short hackathon walkthrough, see [MVP verification](docs/MVP_VERIFICATION.md). Use `python scripts/configure_local.py` to create ignored local Supabase and PostgreSQL settings without printing credentials.
 
 ## Local run
 
@@ -53,7 +55,7 @@ npm run build
 npm run e2e
 ```
 
-The end-to-end browser test covers the public landing page without external credentials. Full sign-up, paid TinyFish retrieval, and PostgreSQL deployment need configured services and are not claimed as locally verified without them.
+The browser test covers the public landing page without external credentials. One external TinyFish connector retrieval has been verified against CDSCO; full signed-in browsing, the app's own BYOK retrieval path, and PostgreSQL deployment still need configured services.
 
 ## Data and safety
 

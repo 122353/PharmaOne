@@ -6,7 +6,7 @@ import argparse
 from datetime import datetime, timezone
 from sqlalchemy import select
 from .config import settings
-from .db import Base, engine, SessionLocal
+from .db import SessionLocal, initialize_schema
 from .models import Alert, Pharmacy, IngestionRun
 from .tinyfish import retrieve
 from .ingestion import store_records
@@ -21,7 +21,7 @@ def main():
     key = settings().tinyfish_service_key
     if not key:
         parser.error("TINYFISH_SERVICE_KEY is required; no user key will be substituted")
-    Base.metadata.create_all(engine)
+    initialize_schema()
     with SessionLocal() as db:
         run = IngestionRun(period=args.period)
         db.add(run)

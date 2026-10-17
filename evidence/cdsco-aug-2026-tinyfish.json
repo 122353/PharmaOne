@@ -1,0 +1,48 @@
+{
+  "source_url": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+  "provider_run_id": "7d650bd4-71e6-49dc-b967-f95304ecb6aa",
+  "provider_run_url": "https://agent.tinyfish.ai/runs/7d650bd4-71e6-49dc-b967-f95304ecb6aa",
+  "reporting_period": "AUG-2026",
+  "records": [
+    {
+      "product_name": "Chlorine Tablets",
+      "manufacturer": "Hind Pharma.  11-G, Industrial Area, Govindpura, Bhopal-462022. M.P. India",
+      "batch_number": "292",
+      "quality_issue": "Description Available chlorine",
+      "reporting_source": "State Lab",
+      "reporting_period": "AUG-2026"
+    },
+    {
+      "product_name": "Montelukast sodium & Levocetirizine hydrochloride Tablets IP",
+      "manufacturer": "Vrihaan Pharmaceuticals LLP. Plot no 17A, V2 House, Shreenathji ESTATE, Changodar. Ahmadabad 382213",
+      "batch_number": "VRNT-933",
+      "quality_issue": "Dissolution",
+      "reporting_source": "State Lab",
+      "reporting_period": "AUG-2026"
+    },
+    {
+      "product_name": "Calcium Carbonate with Vit. D3 Tablets IP",
+      "manufacturer": "SVR Healthcare Vill. Barotiwala, Paonta Sahib, Distt Sirmaur",
+      "batch_number": "SNT-250038",
+      "quality_issue": "The sample does not conforms to claim as per IP 2022 in respect to the test of Dissolution of calcium and Assay of Vit.D3 Claim 250 i.u Found 179.15 IU",
+      "reporting_source": "State Lab",
+      "reporting_period": "AUG-2026"
+    },
+    {
+      "product_name": "Linezolid Tablets IP 600mg",
+      "manufacturer": "Symbiosis Pharmaceuticals Pvt. Ltd.,  Suketi Road, Kala Amb-173030 (Sirmour) HP",
+      "batch_number": "TG261185",
+      "quality_issue": "The sample does not conform to claim as per IP 2022 in respect to the Test of Dissolution of Linezolid.",
+      "reporting_source": "State Lab",
+      "reporting_period": "AUG-2026"
+    },
+    {
+      "product_name": "Albendazole Tablets IP 400mg",
+      "manufacturer": "Pure & Cure Heatlhcare Pvt. Ltd. Plot No. 26A, 27-30 Sector 8A, I.I.E SIDCUL Ranipur, Haridwar-249403 UK",
+      "batch_number": "ANE01AOB",
+      "quality_issue": "In respect of Uniformity of weight",
+      "reporting_source": "State Lab",
+      "reporting_period": "AUG-2026"
+    }
+  ]
+}

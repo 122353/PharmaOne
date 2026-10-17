@@ -82,9 +82,20 @@ def test_tinyfish_connection_is_owner_scoped_and_never_returns_plaintext(client,
     identity['user'] = 'user-b'
     assert http.get('/api/integrations/tinyfish').json()['connected'] is False
     assert http.delete('/api/integrations/tinyfish').json()['connected'] is False
+    assert http.put('/api/pharmacies/current', json={"name":"B Pharmacy"}).status_code == 200
+    assert http.post('/api/ingestion/sync', json={"period":"AUG-2026","account":"mine"}).status_code == 409
     identity['user'] = 'user-a'
     assert http.get('/api/integrations/tinyfish').json()['connected'] is True
     settings.cache_clear()
+
+
+def test_invalid_tinyfish_key_is_not_echoed_by_api_or_logs(client, caplog):
+    http, _, _ = client
+    submitted = 'private-key-' + 'x' * 500
+    response = http.post('/api/integrations/tinyfish', json={"api_key": submitted})
+    assert submitted not in response.text
+    assert submitted not in caplog.text
+    assert response.status_code == 400
 
 
 def test_failed_sync_retains_last_successful_check_time(client):

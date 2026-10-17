@@ -1,0 +1,5 @@
+medicine_name,manufacturer,batch_number,strength,expiry_date,quantity
+Linezolid Tablets IP 600mg,Symbiosis Pharmaceuticals Pvt Ltd,TG261185,600mg,2028-04-01,4
+Linezolid Tablets IP 600mg,,TG261185,600mg,2028-04-01,2
+Linezolid Tablets IP 600mg,Symbiosis Pharmaceuticals Pvt Ltd,WRONG-BATCH,600mg,2028-04-01,2
+Linezolid Tablets 300mg,Symbiosis Pharmaceuticals Pvt Ltd,TG261185,300mg,2028-04-01,2

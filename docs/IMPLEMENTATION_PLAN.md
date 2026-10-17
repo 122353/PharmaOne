@@ -7,21 +7,21 @@ Next.js App Router serves the public and authenticated UI. Supabase Auth issues 
 ## Milestones
 
 - [x] 0. Schema, API contracts, configuration, and local/deployment instructions.
-- [ ] 1. TinyFish browser retrieval adapter, strict extraction, provenance, deduplication, source health. Live run remains unverified without a key and paid-run approval.
+- [ ] 1. TinyFish browser retrieval adapter, strict extraction, provenance, deduplication, source health. One connector-funded live run and independent CDSCO comparison passed; the app BYOK retrieval route remains unverified.
 - [x] 2. CSV validation, persistent inventory, deterministic explainable matching, tests.
 - [ ] 3. Supabase session verification, pharmacy onboarding, ContextOS Lite, tenant tests. Code and tenant tests complete; real Supabase session test pending project credentials.
 - [ ] 4. Landing, authentication, import, dashboard, alerts, investigation, settings UI. Build and public-page browser tests complete; signed-in browser journey pending Supabase.
-- [ ] 5. Encrypted BYOK, simulated hold audit, end-to-end and build verification. Unit/integration tests complete; provider and PostgreSQL E2E pending configured services.
+- [ ] 5. Encrypted BYOK, simulated hold audit, end-to-end and build verification. A verified-source/synthetic-stock API workflow passes; authenticated browser and PostgreSQL E2E remain pending configured services.
 
 ## Verification record
 
-- `python -m pytest tests -q`: 27 passed on SQLite test database.
+- `python -m pytest tests -q`: 36 tests passed on SQLite, including verified CDSCO snapshot import, synthetic pharmacy workflow, and legacy local schema repair.
 - `npm run build`: successful Next.js production build.
-- `npm run e2e`: 2 public landing browser tests passed at desktop and 390 px.
+- `npm run e2e`: 3 public landing browser tests passed at desktop and 390 px, including reduced motion.
 - `npm audit --omit=dev --audit-level=moderate`: zero production dependency advisories.
 - `GET /health`: 200 and `GET /api/me` without a token: 401 on a local FastAPI server.
 - Docker daemon was unavailable, so container and PostgreSQL deployment were not exercised.
-- No TinyFish or Supabase credentials were available. No metered TinyFish run was started.
+- Supabase credentials remain unavailable. One authorized TinyFish connector run retrieved five CDSCO rows; the app's BYOK sync path has not been run.
 
 ## Safety decisions
 

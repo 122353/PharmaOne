@@ -1,0 +1,10 @@
+{
+  "status": "verified",
+  "verified_at": "2026-10-17T20:27:27.705Z",
+  "source_url": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+  "provider_run_id": "7d650bd4-71e6-49dc-b967-f95304ecb6aa",
+  "snapshot_sha256": "ef1ef885e76fae74e7e5b55070605ddb2d9b7142f3cf94924060e74adfeca3b9",
+  "records_checked": 5,
+  "fields_checked": 30,
+  "mismatches": []
+}

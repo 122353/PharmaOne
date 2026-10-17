@@ -1,15 +1,18 @@
 from datetime import datetime, timezone, timedelta
 from contextlib import asynccontextmanager
 import httpx
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select, desc, func
 from sqlalchemy.orm import Session
 from .auth import current_user
 from .config import settings
-from .db import Base, engine, get_db
+from .db import get_db, initialize_schema
 from .models import Pharmacy, InventoryItem, Alert, AlertVersion, Match, Investigation, AuditEvent, TinyfishConnection, IngestionRun
 from .ingestion import store_records
 from .csv_import import parse_csv
@@ -19,12 +22,19 @@ from .crypto import encrypt, decrypt, fingerprint as key_fingerprint
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    initialize_schema()
     yield
 
 
 app = FastAPI(title="PharmaOne API", version="0.1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings().allowed_origins.split(",")], allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["Authorization", "Content-Type"])
+
+
+@app.exception_handler(RequestValidationError)
+async def safe_validation_error(request: Request, exc: RequestValidationError):
+    if request.url.path == "/api/integrations/tinyfish":
+        return JSONResponse(status_code=400, content={"detail": "Invalid TinyFish key"})
+    return await request_validation_exception_handler(request, exc)
 
 
 def fields(obj, names):
