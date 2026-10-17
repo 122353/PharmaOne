@@ -1,0 +1,117 @@
+from datetime import datetime, timezone
+from uuid import uuid4
+from sqlalchemy import String, Text, Integer, DateTime, ForeignKey, UniqueConstraint, JSON
+from sqlalchemy.orm import Mapped, mapped_column
+from .db import Base
+
+
+def uid():
+    return str(uuid4())
+
+
+def now():
+    return datetime.now(timezone.utc)
+
+
+class Pharmacy(Base):
+    __tablename__ = "pharmacies"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    owner_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    name: Mapped[str] = mapped_column(String(160))
+    contact_name: Mapped[str] = mapped_column(String(160), default="")
+    kind: Mapped[str] = mapped_column(String(32), default="retail")
+    city: Mapped[str] = mapped_column(String(100), default="")
+    state: Mapped[str] = mapped_column(String(100), default="")
+    inventory_format: Mapped[str] = mapped_column(String(32), default="csv")
+    batch_available: Mapped[bool] = mapped_column(default=True)
+    manufacturer_available: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class InventoryItem(Base):
+    __tablename__ = "inventory_items"
+    __table_args__ = (UniqueConstraint("pharmacy_id", "medicine_name", "batch_number", "manufacturer", name="uq_stock_identity"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    pharmacy_id: Mapped[str] = mapped_column(ForeignKey("pharmacies.id"), index=True)
+    medicine_name: Mapped[str] = mapped_column(String(255))
+    manufacturer: Mapped[str] = mapped_column(String(255), default="")
+    batch_number: Mapped[str] = mapped_column(String(100), default="", index=True)
+    strength: Mapped[str] = mapped_column(String(100), default="")
+    expiry_date: Mapped[str] = mapped_column(String(30), default="")
+    quantity: Mapped[int] = mapped_column(Integer, default=0)
+    quality_state: Mapped[str] = mapped_column(String(32), default="needs_verification")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class Alert(Base):
+    __tablename__ = "regulatory_alerts"
+    fingerprint: Mapped[str] = mapped_column(String(64), primary_key=True)
+    product_name: Mapped[str] = mapped_column(String(500))
+    manufacturer: Mapped[str] = mapped_column(String(700), default="")
+    batch_number: Mapped[str] = mapped_column(String(120), default="", index=True)
+    quality_issue: Mapped[str] = mapped_column(Text, default="")
+    reporting_period: Mapped[str] = mapped_column(String(20))
+    reporting_source: Mapped[str] = mapped_column(String(100), default="")
+    source_url: Mapped[str] = mapped_column(String(500))
+    retrieved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    run_id: Mapped[str] = mapped_column(String(36))
+    raw_record: Mapped[dict] = mapped_column(JSON)
+    classification: Mapped[str] = mapped_column(String(30), default="nsq")
+
+
+class Match(Base):
+    __tablename__ = "inventory_alert_matches"
+    __table_args__ = (UniqueConstraint("inventory_id", "alert_id", name="uq_match_pair"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    pharmacy_id: Mapped[str] = mapped_column(ForeignKey("pharmacies.id"), index=True)
+    inventory_id: Mapped[str] = mapped_column(ForeignKey("inventory_items.id"))
+    alert_id: Mapped[str] = mapped_column(ForeignKey("regulatory_alerts.fingerprint"))
+    status: Mapped[str] = mapped_column(String(32))
+    explanation: Mapped[dict] = mapped_column(JSON)
+    checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class Investigation(Base):
+    __tablename__ = "investigations"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    pharmacy_id: Mapped[str] = mapped_column(ForeignKey("pharmacies.id"), index=True)
+    match_id: Mapped[str] = mapped_column(ForeignKey("inventory_alert_matches.id"), unique=True)
+    status: Mapped[str] = mapped_column(String(32), default="open")
+    note: Mapped[str] = mapped_column(Text, default="")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
+
+
+class AuditEvent(Base):
+    __tablename__ = "audit_events"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    pharmacy_id: Mapped[str] = mapped_column(ForeignKey("pharmacies.id"), index=True)
+    actor_id: Mapped[str] = mapped_column(String(64))
+    action: Mapped[str] = mapped_column(String(80))
+    entity_id: Mapped[str] = mapped_column(String(36))
+    detail: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class TinyfishConnection(Base):
+    __tablename__ = "tinyfish_connections"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    user_id: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    encrypted_key: Mapped[str] = mapped_column(Text)
+    fingerprint: Mapped[str] = mapped_column(String(64))
+    status: Mapped[str] = mapped_column(String(20), default="connected")
+    last_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class IngestionRun(Base):
+    __tablename__ = "ingestion_runs"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    requesting_user_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    connection_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    provider_run_id: Mapped[str] = mapped_column(String(100), default="")
+    period: Mapped[str] = mapped_column(String(20))
+    status: Mapped[str] = mapped_column(String(24), default="running")
+    error: Mapped[str] = mapped_column(String(300), default="")
+    record_count: Mapped[int] = mapped_column(Integer, default=0)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
