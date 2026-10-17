@@ -59,6 +59,17 @@ class Alert(Base):
     classification: Mapped[str] = mapped_column(String(30), default="nsq")
 
 
+class AlertVersion(Base):
+    __tablename__ = "alert_versions"
+    __table_args__ = (UniqueConstraint("alert_id", "content_hash", name="uq_alert_version"),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    alert_id: Mapped[str] = mapped_column(ForeignKey("regulatory_alerts.fingerprint"), index=True)
+    content_hash: Mapped[str] = mapped_column(String(64))
+    quality_issue: Mapped[str] = mapped_column(Text, default="")
+    raw_record: Mapped[dict] = mapped_column(JSON)
+    observed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
 class Match(Base):
     __tablename__ = "inventory_alert_matches"
     __table_args__ = (UniqueConstraint("inventory_id", "alert_id", name="uq_match_pair"),)

@@ -9,6 +9,7 @@ from .config import settings
 from .db import Base, engine, SessionLocal
 from .models import Alert, Pharmacy, IngestionRun
 from .tinyfish import retrieve
+from .ingestion import store_records
 from .main import rerun
 
 
@@ -27,9 +28,7 @@ def main():
         db.commit()
         try:
             records, provider_run = retrieve(key, args.period, args.limit)
-            for record in records:
-                if not db.get(Alert, record["fingerprint"]):
-                    db.add(Alert(**record, run_id=run.id))
+            store_records(db, records, run.id)
             run.status = "succeeded"
             run.provider_run_id = provider_run
             run.record_count = len(records)

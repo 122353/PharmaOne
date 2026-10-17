@@ -10,7 +10,8 @@ from sqlalchemy.orm import Session
 from .auth import current_user
 from .config import settings
 from .db import Base, engine, get_db
-from .models import Pharmacy, InventoryItem, Alert, Match, Investigation, AuditEvent, TinyfishConnection, IngestionRun
+from .models import Pharmacy, InventoryItem, Alert, AlertVersion, Match, Investigation, AuditEvent, TinyfishConnection, IngestionRun
+from .ingestion import store_records
 from .csv_import import parse_csv
 from .matching import compare
 from .tinyfish import retrieve, SOURCE_URL
@@ -188,6 +189,13 @@ def alert_detail(alert_id: str, user: str = Depends(current_user), db: Session =
     return alert_out(alert)
 
 
+@app.get("/api/alerts/{alert_id}/versions")
+def alert_versions(alert_id: str, user: str = Depends(current_user), db: Session = Depends(get_db)):
+    if db.get(Alert, alert_id) is None:
+        raise HTTPException(404, "Alert not found")
+    return [fields(v, ["id", "quality_issue", "observed_at"]) for v in db.scalars(select(AlertVersion).where(AlertVersion.alert_id == alert_id).order_by(AlertVersion.observed_at))]
+
+
 @app.get("/api/matches")
 def matches(user: str = Depends(current_user), db: Session = Depends(get_db)):
     pharmacy = pharmacy_for(db, user)
@@ -320,10 +328,7 @@ def sync(data: SyncInput, user: str = Depends(current_user), db: Session = Depen
     db.commit()
     try:
         records, provider_run = retrieve(decrypt(entry.encrypted_key), data.period, data.limit)
-        for record in records:
-            existing = db.get(Alert, record["fingerprint"])
-            if existing is None:
-                db.add(Alert(**record, run_id=run.id))
+        store_records(db, records, run.id)
         run.status = "succeeded"
         run.provider_run_id = provider_run
         run.record_count = len(records)

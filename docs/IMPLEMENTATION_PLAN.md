@@ -15,7 +15,7 @@ Next.js App Router serves the public and authenticated UI. Supabase Auth issues 
 
 ## Verification record
 
-- `python -m pytest tests -q`: 26 passed on SQLite test database.
+- `python -m pytest tests -q`: 27 passed on SQLite test database.
 - `npm run build`: successful Next.js production build.
 - `npm run e2e`: 2 public landing browser tests passed at desktop and 390 px.
 - `npm audit --omit=dev --audit-level=moderate`: zero production dependency advisories.

@@ -59,7 +59,7 @@ The end-to-end browser test covers the public landing page without external cred
 
 The parser allows UTF-8 CSV up to 2 MB and 5,000 rows. It validates columns, quantity, ISO expiry dates and spreadsheet formulas. Missing critical identifiers remain in `Needs verification`. Matching uses conservative normalized product/manufacturer selection and exact batch comparison after case/whitespace normalization. A potential match is a review prompt. `No identified match` does not prove safety. NSQ does not automatically mean recall.
 
-The TinyFish adapter requests a selected CDSCO reporting period and at most 25 records per run. It stores source URL, period, retrieval timestamp and run provenance. It never starts automatically. The current adapter is synchronous and checks one period at a time; scheduled nationwide coverage and full pagination are not implemented. Provider failures leave previously retrieved records dated and visible.
+The TinyFish adapter requests a selected CDSCO reporting period and at most 25 records per run. Each stored row must carry that period. It stores source URL, period, retrieval timestamp, run provenance and observed revisions. It never starts automatically. The current adapter is synchronous and checks one period at a time; scheduled nationwide coverage and full pagination are not implemented. Provider failures leave previously retrieved records dated and visible.
 
 An operator can run central ingestion with a separately funded service key: from `api`, run `python -m app.ingest_service AUG-2026 --limit 10`. Schedule that command only after choosing a budget and coverage policy. User-initiated jobs never select the service key.
 
