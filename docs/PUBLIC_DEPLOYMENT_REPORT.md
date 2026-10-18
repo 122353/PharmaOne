@@ -2,7 +2,7 @@
 
 ## Current state
 
-The application is locally reachable at `http://localhost:3000/`; the API responds at `http://localhost:8000/health`. Public Vercel and Render URLs do not exist yet. Public deployment has not been approved or performed. Git has no remote and there is no PharmaOne project in the authenticated Vercel account. Render account authentication and billing settings have not been verified.
+The application was locally reachable at `http://localhost:3000/`; the API responded at `http://localhost:8000/health` during local verification. The user approved a free public deployment. Vercel Hobby project `pharmaone-ai` has been created and linked to `web/`; its Production and Preview environments have the two browser-public Supabase settings. No Vercel deployment or Render service exists yet, so there are no verified public URLs. Git has no remote. Render account authentication and billing settings have not been verified.
 
 ## Implemented and verified locally
 
@@ -25,18 +25,18 @@ The application is locally reachable at `http://localhost:3000/`; the API respon
 
 ## Not yet verified publicly
 
-- Vercel and Render provisioning, GitHub push deployment and provider billing settings.
+- Vercel deployment, Render provisioning, GitHub push deployment and provider billing settings.
 - Render URL and cold start, Vercel URL, CORS, Supabase Auth redirects, live signup/login, two real accounts and public end-to-end persistence.
 - Real phone camera and real medicine packaging OCR quality.
 - PharmaMatch/PharmaClassify accuracy on representative labelled regulatory and pharmacy datasets.
 - Continued TinyFish retrieval on the hosted API. Under the ₹0 target, the blueprint intentionally omits the key; the stored official snapshot remains available. No continuous monitoring is claimed.
 
-## Remaining actions after approval
+## Remaining deployment actions
 
-1. Verify GitHub and Render login and that selected Render and Vercel resources are Free/Hobby with no payment method or overage billing.
+1. Verify GitHub and Render login and that selected Render and Vercel resources are Free/Hobby with no payment method or overage billing. The Vercel project is on a Hobby team; its payment settings remain unverified.
 2. Create a private GitHub repository; check exactly which files are committed; push the reviewed branch. Connect that repository to Render and Vercel. Preserve `.env` files outside Git.
 3. Create Render from `render.yaml`; enter only `DATABASE_URL`, `SUPABASE_URL` and exact HTTPS `ALLOWED_ORIGINS` in provider secret prompts. Select the free plan and one worker. Do not enter TinyFish or Sarvam keys.
-4. Create Vercel project with root directory `web`; set `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Link the approved branch and verify Hobby plan.
+4. Set `NEXT_PUBLIC_API_URL` after Render provides its HTTPS address, connect GitHub to the existing Vercel project, and deploy the approved branch.
 5. Add the final Vercel hostname to Supabase Auth site URL/redirect allowlist. Use an existing confirmed test user or disposable accounts for live signup, inventory, scan, alert, investigation, refresh and cross-tenant checks.
 6. Record public URLs, cold-start measurements and any defects in this report. If any provider requires payment or broader permissions, stop before provisioning.
 

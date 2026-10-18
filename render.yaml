@@ -9,6 +9,8 @@ services:
     healthCheckPath: /health
     autoDeployTrigger: commit
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
       - key: PHARMAONE_ENV
         value: production
       - key: DATABASE_URL
