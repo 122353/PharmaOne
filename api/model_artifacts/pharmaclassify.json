@@ -1,0 +1,99 @@
+{
+  "version": "1.0",
+  "training_source": "synthetic quality-finding phrases",
+  "class_documents": {
+    "dissolution": 6,
+    "assay_or_content": 6,
+    "identification": 6,
+    "contamination": 6,
+    "other_quality_finding": 6
+  },
+  "token_counts": {
+    "dissolution": {
+      "dissolu": 6,
+      "tablets": 1,
+      "unsatis": 1
+    },
+    "assay_or_content": {
+      "assay": 3,
+      "potency": 1,
+      "substan": 1,
+      "low": 1,
+      "active": 2,
+      "content": 2,
+      "ingredi": 1
+    },
+    "identification": {
+      "identit": 3,
+      "active": 2,
+      "ingredi": 2,
+      "identif": 3,
+      "incorre": 1,
+      "confirm": 1
+    },
+    "contamination": {
+      "microbi": 3,
+      "count": 1,
+      "exceeds": 1,
+      "sterili": 1,
+      "particu": 1,
+      "contami": 3,
+      "bacteri": 1,
+      "observe": 1
+    },
+    "other_quality_finding": {
+      "friabil": 1,
+      "labelli": 1,
+      "defect": 1,
+      "observe": 1,
+      "ph": 1,
+      "weight": 1,
+      "variati": 1,
+      "appeara": 1,
+      "disinte": 1
+    }
+  },
+  "class_tokens": {
+    "dissolution": 8,
+    "assay_or_content": 11,
+    "identification": 12,
+    "contamination": 12,
+    "other_quality_finding": 9
+  },
+  "vocabulary": [
+    "active",
+    "appeara",
+    "assay",
+    "bacteri",
+    "confirm",
+    "contami",
+    "content",
+    "count",
+    "defect",
+    "disinte",
+    "dissolu",
+    "exceeds",
+    "friabil",
+    "identif",
+    "identit",
+    "incorre",
+    "ingredi",
+    "labelli",
+    "low",
+    "microbi",
+    "observe",
+    "particu",
+    "ph",
+    "potency",
+    "sterili",
+    "substan",
+    "tablets",
+    "unsatis",
+    "variati",
+    "weight"
+  ],
+  "synthetic_holdout": {
+    "correct": 6,
+    "total": 10
+  }
+}

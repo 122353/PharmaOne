@@ -1,7 +1,5 @@
 """Create ignored local PharmaOne configuration without echoing credentials."""
-import base64
 import getpass
-import os
 from pathlib import Path
 from urllib.parse import quote, urlparse
 from urllib.request import urlopen
@@ -49,11 +47,10 @@ def main() -> None:
     except OSError as exc:
         raise SystemExit("Could not validate the Supabase JWKS endpoint. No files were written.") from exc
 
-    encryption_key = base64.urlsafe_b64encode(os.urandom(32)).decode("ascii")
     API_ENV.write_text(
         f"DATABASE_URL={postgres_url}\nSUPABASE_URL={project_url}\n"
-        f"SUPABASE_JWT_AUDIENCE=authenticated\nTINYFISH_ENCRYPTION_KEY={encryption_key}\n"
-        "ALLOWED_ORIGINS=http://localhost:3000\n",
+        "SUPABASE_JWT_AUDIENCE=authenticated\nTINYFISH_API_KEY=\nSARVAM_API_KEY=\n"
+        "ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000\n",
         encoding="utf-8",
     )
     WEB_ENV.write_text(

@@ -1,4 +1,4 @@
-"""TinyFish browser agent adapter. Only called after explicit user sync."""
+"""TinyFish browser agent adapter for explicit operator synchronization."""
 import hashlib
 import json
 import re

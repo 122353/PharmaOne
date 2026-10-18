@@ -1,0 +1,521 @@
+{
+  "checked_at_utc": "2026-10-18T10:40:18.855452+00:00",
+  "run_id": "c4f6314f-8d7d-4664-854d-053384dc042d",
+  "official_source": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+  "official_table_endpoint": "https://cdscoonline.gov.in/CDSCO/publicNsqDrugTable",
+  "official_rows_available": 220,
+  "stored_rows": 10,
+  "comparisons": [
+    {
+      "batch": "292",
+      "status": "match",
+      "fields": {
+        "product_name": {
+          "stored": "Chlorine Tablets",
+          "official": "Chlorine Tablets",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "manufacturer": {
+          "stored": "Hind Pharma. 11-G, Industrial Area, Govindpura, Bhopal-462022. M.P. India",
+          "official": "Hind Pharma.  11-G, Industrial Area, Govindpura, Bhopal-462022. M.P. India",
+          "exact": false,
+          "whitespace_case_equal": true
+        },
+        "batch_number": {
+          "stored": "292",
+          "official": "292",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "quality_issue": {
+          "stored": "Description Available chlorine",
+          "official": "Description Available chlorine",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_period": {
+          "stored": "AUG-2026",
+          "official": "AUG-2026",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_source": {
+          "stored": "State Lab",
+          "official": "State Lab",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "source_url": {
+          "stored": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "official": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "exact": true
+        },
+        "retrieved_at": {
+          "stored": "2026-10-18T08:21:08.643185+00:00",
+          "valid": true
+        }
+      }
+    },
+    {
+      "batch": "ANE01AOB",
+      "status": "match",
+      "fields": {
+        "product_name": {
+          "stored": "Albendazole Tablets IP 400mg",
+          "official": "Albendazole Tablets IP 400mg",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "manufacturer": {
+          "stored": "Pure & Cure Heatlhcare Pvt. Ltd. Plot No. 26A, 27-30 Sector 8A, I.I.E SIDCUL Ranipur, Haridwar-249403 UK",
+          "official": "Pure & Cure Heatlhcare Pvt. Ltd. Plot No. 26A, 27-30 Sector 8A, I.I.E SIDCUL Ranipur, Haridwar-249403 UK",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "batch_number": {
+          "stored": "ANE01AOB",
+          "official": "ANE01AOB",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "quality_issue": {
+          "stored": "In respect of Uniformity of weight",
+          "official": "In respect of Uniformity of weight",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_period": {
+          "stored": "AUG-2026",
+          "official": "AUG-2026",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_source": {
+          "stored": "State Lab",
+          "official": "State Lab",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "source_url": {
+          "stored": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "official": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "exact": true
+        },
+        "retrieved_at": {
+          "stored": "2026-10-18T08:21:09.460373+00:00",
+          "valid": true
+        }
+      }
+    },
+    {
+      "batch": "COA02AAA",
+      "status": "match",
+      "fields": {
+        "product_name": {
+          "stored": "Calcium, Vitamin D3, Methylcobalamin, L-Methylfolate Calcium & Pyridoxal-5-Phosphate Tablets",
+          "official": "Calcium, Vitamin D3, Methylcobalamin, L-Methylfolate Calcium & Pyridoxal-5-Phosphate Tablets",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "manufacturer": {
+          "stored": "Akums Drugs & Pharmaceuticals Ltd., At: Plot No. 26A, 27-30, Sector-8A, I.I.E, SIDCUL, Ranipur, Haridwar Uttarakhand-249403",
+          "official": "Akums Drugs & Pharmaceuticals Ltd., At: Plot No. 26A, 27-30, Sector-8A, I.I.E, SIDCUL, Ranipur, Haridwar Uttarakhand-249403",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "batch_number": {
+          "stored": "COA02AAA",
+          "official": "COA02AAA",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "quality_issue": {
+          "stored": "Assay for Vitamin D3",
+          "official": "Assay for Vitamin D3",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_period": {
+          "stored": "AUG-2026",
+          "official": "AUG-2026",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_source": {
+          "stored": "State Lab",
+          "official": "State Lab",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "source_url": {
+          "stored": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "official": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "exact": true
+        },
+        "retrieved_at": {
+          "stored": "2026-10-18T08:21:10.179204+00:00",
+          "valid": true
+        }
+      }
+    },
+    {
+      "batch": "COS03AHA",
+      "status": "match",
+      "fields": {
+        "product_name": {
+          "stored": "Paracetamol and Tramadol Hydrochloride Tablets I.P",
+          "official": "Paracetamol and Tramadol Hydrochloride Tablets I.P",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "manufacturer": {
+          "stored": "Pure and Cure Healthcare Pvt. Ltd., Plot No. 26A, 27-30, Sector-8A, I.I.E., SIDCUL, Ranipur, Haridwar, Uttarakhand",
+          "official": "Pure and Cure Healthcare Pvt. Ltd., Plot No. 26A, 27-30, Sector-8A, I.I.E., SIDCUL, Ranipur, Haridwar, Uttarakhand",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "batch_number": {
+          "stored": "COS03AHA",
+          "official": "COS03AHA",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "quality_issue": {
+          "stored": "Assay for Tramadol Hydrochloride",
+          "official": "Assay for Tramadol Hydrochloride",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_period": {
+          "stored": "AUG-2026",
+          "official": "AUG-2026",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_source": {
+          "stored": "State Lab",
+          "official": "State Lab",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "source_url": {
+          "stored": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "official": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "exact": true
+        },
+        "retrieved_at": {
+          "stored": "2026-10-18T08:21:10.383089+00:00",
+          "valid": true
+        }
+      }
+    },
+    {
+      "batch": "CT503513C",
+      "status": "match",
+      "fields": {
+        "product_name": {
+          "stored": "Cefuroxime Axetil IP",
+          "official": "Cefuroxime Axetil IP",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "manufacturer": {
+          "stored": "Nikvin Healthcare (I) Pvt. Ltd., Baddi-Barotiwala Road Govt. Timber Depot, Vill. Katha, Baddi (H.P)-173205",
+          "official": "Nikvin Healthcare (I) Pvt. Ltd., Baddi-Barotiwala Road Govt. Timber Depot, Vill. Katha, Baddi (H.P)-173205",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "batch_number": {
+          "stored": "CT503513C",
+          "official": "CT503513C",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "quality_issue": {
+          "stored": "Description",
+          "official": "Description",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_period": {
+          "stored": "AUG-2026",
+          "official": "AUG-2026",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_source": {
+          "stored": "State Lab",
+          "official": "State Lab",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "source_url": {
+          "stored": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "official": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "exact": true
+        },
+        "retrieved_at": {
+          "stored": "2026-10-18T08:21:09.752138+00:00",
+          "valid": true
+        }
+      }
+    },
+    {
+      "batch": "KBI26068C",
+      "status": "match",
+      "fields": {
+        "product_name": {
+          "stored": "Disodium Hydrogen Citrate Solution",
+          "official": "Disodium Hydrogen Citrate Solution",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "manufacturer": {
+          "stored": "Stadmed Pvt. Ltd. C-18, Sarojni Nagar Industrial Estate Lucknow-226008.",
+          "official": "Stadmed Pvt. Ltd. C-18, Sarojni Nagar Industrial Estate Lucknow-226008.",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "batch_number": {
+          "stored": "KBI26068C",
+          "official": "KBI26068C",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "quality_issue": {
+          "stored": "Assay of Disodium Hydrogen Citrate B.P.",
+          "official": "Assay of Disodium Hydrogen Citrate B.P.",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_period": {
+          "stored": "AUG-2026",
+          "official": "AUG-2026",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_source": {
+          "stored": "State Lab",
+          "official": "State Lab",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "source_url": {
+          "stored": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "official": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "exact": true
+        },
+        "retrieved_at": {
+          "stored": "2026-10-18T08:21:10.588054+00:00",
+          "valid": true
+        }
+      }
+    },
+    {
+      "batch": "SNT-250038",
+      "status": "match",
+      "fields": {
+        "product_name": {
+          "stored": "Calcium Carbonate with Vit. D3 Tablets IP",
+          "official": "Calcium Carbonate with Vit. D3 Tablets IP",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "manufacturer": {
+          "stored": "SVR Healthcare Vill. Barotiwala, Paonta Sahib, Distt Sirmaur",
+          "official": "SVR Healthcare Vill. Barotiwala, Paonta Sahib, Distt Sirmaur",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "batch_number": {
+          "stored": "SNT-250038",
+          "official": "SNT-250038",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "quality_issue": {
+          "stored": "The sample does not conforms to claim as per IP 2022 in respect to the test of Dissolution of calcium and Assay of Vit.D3 Claim 250 i.u Found 179.15 IU",
+          "official": "The sample does not conforms to claim as per IP 2022 in respect to the test of Dissolution of calcium and Assay of Vit.D3 Claim 250 i.u Found 179.15 IU",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_period": {
+          "stored": "AUG-2026",
+          "official": "AUG-2026",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_source": {
+          "stored": "State Lab",
+          "official": "State Lab",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "source_url": {
+          "stored": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "official": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "exact": true
+        },
+        "retrieved_at": {
+          "stored": "2026-10-18T08:21:09.048892+00:00",
+          "valid": true
+        }
+      }
+    },
+    {
+      "batch": "TG242142",
+      "status": "match",
+      "fields": {
+        "product_name": {
+          "stored": "Sitagliptin Phosphate and Metformin Hydrochloride Tablets (Sitarise-M)",
+          "official": "Sitagliptin Phosphate and Metformin Hydrochloride Tablets (Sitarise-M)",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "manufacturer": {
+          "stored": "Symbiosis Pharmaceuticals Pvt. Ltd. Suketi Road, Kala Amb-173030 (Sirmour) HP",
+          "official": "Symbiosis Pharmaceuticals Pvt. Ltd. Suketi Road, Kala Amb-173030 (Sirmour) HP",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "batch_number": {
+          "stored": "TG242142",
+          "official": "TG242142",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "quality_issue": {
+          "stored": "Description and test for Uniformity of weight as per indian Pharmacopoeia",
+          "official": "Description and test for Uniformity of weight as per indian Pharmacopoeia",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_period": {
+          "stored": "AUG-2026",
+          "official": "AUG-2026",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_source": {
+          "stored": "State Lab",
+          "official": "State Lab",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "source_url": {
+          "stored": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "official": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "exact": true
+        },
+        "retrieved_at": {
+          "stored": "2026-10-18T08:21:09.974075+00:00",
+          "valid": true
+        }
+      }
+    },
+    {
+      "batch": "TG261185",
+      "status": "match",
+      "fields": {
+        "product_name": {
+          "stored": "Linezolid Tablets IP 600mg",
+          "official": "Linezolid Tablets IP 600mg",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "manufacturer": {
+          "stored": "Symbiosis Pharmaceuticals Pvt. Ltd., Suketi Road, Kala Amb-173030 (Sirmour) HP",
+          "official": "Symbiosis Pharmaceuticals Pvt. Ltd.,  Suketi Road, Kala Amb-173030 (Sirmour) HP",
+          "exact": false,
+          "whitespace_case_equal": true
+        },
+        "batch_number": {
+          "stored": "TG261185",
+          "official": "TG261185",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "quality_issue": {
+          "stored": "The sample does not conform to claim as per IP 2022 in respect to the Test of Dissolution of Linezolid.",
+          "official": "The sample does not conform to claim as per IP 2022 in respect to the Test of Dissolution of Linezolid.",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_period": {
+          "stored": "AUG-2026",
+          "official": "AUG-2026",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_source": {
+          "stored": "State Lab",
+          "official": "State Lab",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "source_url": {
+          "stored": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "official": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "exact": true
+        },
+        "retrieved_at": {
+          "stored": "2026-10-18T08:21:09.253720+00:00",
+          "valid": true
+        }
+      }
+    },
+    {
+      "batch": "VRNT-933",
+      "status": "match",
+      "fields": {
+        "product_name": {
+          "stored": "Montelukast sodium & Levocetirizine hydrochloride Tablets IP",
+          "official": "Montelukast sodium & Levocetirizine hydrochloride Tablets IP",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "manufacturer": {
+          "stored": "Vrihaan Pharmaceuticals LLP. Plot no 17A, V2 House, Shreenathji ESTATE, Changodar. Ahmadabad 382213",
+          "official": "Vrihaan Pharmaceuticals LLP. Plot no 17A, V2 House, Shreenathji ESTATE, Changodar. Ahmadabad 382213",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "batch_number": {
+          "stored": "VRNT-933",
+          "official": "VRNT-933",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "quality_issue": {
+          "stored": "Dissolution",
+          "official": "Dissolution",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_period": {
+          "stored": "AUG-2026",
+          "official": "AUG-2026",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "reporting_source": {
+          "stored": "State Lab",
+          "official": "State Lab",
+          "exact": true,
+          "whitespace_case_equal": true
+        },
+        "source_url": {
+          "stored": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "official": "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug",
+          "exact": true
+        },
+        "retrieved_at": {
+          "stored": "2026-10-18T08:21:08.846313+00:00",
+          "valid": true
+        }
+      }
+    }
+  ],
+  "lookup": "Open the official NSQ page, select AUG-2026, and search each batch number; CDSCO does not expose a stable per-row URL."
+}

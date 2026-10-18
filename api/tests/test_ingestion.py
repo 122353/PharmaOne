@@ -25,3 +25,15 @@ def test_retrieved_alert_is_deduplicated_and_refreshes_provenance():
         assert alerts[0].run_id=='run-2'
         assert alerts[0].retrieved_at>=first_checked
         assert len(db.scalars(select(AlertVersion)).all())==2
+
+
+def test_nonsemantic_source_format_change_does_not_create_new_version():
+    engine=create_engine('sqlite://')
+    Base.metadata.create_all(engine)
+    Session=sessionmaker(bind=engine)
+    row={"product_name":"Drug A","manufacturer":"Maker A","batch_number":"B12","reporting_period":"AUG-2026","quality_issue":"Dissolution"}
+    with Session() as db:
+        store_records(db,[normalize_record(row,'AUG-2026')],'run-1')
+        reformatted={**row,"quality_issue":"  Dissolution  ","page_layout":"revised"}
+        store_records(db,[normalize_record(reformatted,'AUG-2026')],'run-2')
+        assert len(db.scalars(select(AlertVersion)).all())==1

@@ -16,11 +16,18 @@ services:
       retries: 10
   api:
     build: ./api
-    env_file: .env
+    env_file: ./api/.env
+    volumes:
+      - ./evidence:/evidence:ro
     environment:
       DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD:-local-only-password}@db:5432/pharmaone
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     depends_on:
       db:
         condition: service_healthy
@@ -32,8 +39,14 @@ services:
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 volumes:
   pharmaone_db:

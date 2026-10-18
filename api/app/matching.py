@@ -1,6 +1,7 @@
 """Conservative candidate selection; never fuzzy-match a batch identifier."""
 import re
 import unicodedata
+from .ml import pharma_match
 
 
 def words(value: str | None) -> set[str]:
@@ -25,6 +26,7 @@ def compare(item: dict, alert: dict) -> tuple[str, dict]:
         "product": {"inventory": item.get("medicine_name"), "source": alert.get("product_name"), "aligned": product_overlap},
         "batch": {"inventory": item.get("batch_number"), "source": alert.get("batch_number"), "exact": bool(batch_a and batch_b and batch_a == batch_b)},
         "manufacturer": {"inventory": item.get("manufacturer"), "source": alert.get("manufacturer"), "aligned": bool(maker_a and maker_b and (maker_a == maker_b or maker_a.issubset(maker_b) or maker_b.issubset(maker_a)))},
+        "pharma_match": pharma_match(item.get("medicine_name") or "", alert.get("product_name") or ""),
     }
     if not product_overlap or (batch_a and batch_b and batch_a != batch_b):
         return "no_identified_match", evidence

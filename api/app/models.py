@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from uuid import uuid4
-from sqlalchemy import String, Text, Integer, DateTime, ForeignKey, UniqueConstraint, JSON
+from sqlalchemy import String, Text, Integer, DateTime, ForeignKey, UniqueConstraint, JSON, LargeBinary
 from sqlalchemy.orm import Mapped, mapped_column
 from .db import Base
 
@@ -90,6 +90,40 @@ class Investigation(Base):
     status: Mapped[str] = mapped_column(String(32), default="open")
     note: Mapped[str] = mapped_column(Text, default="")
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
+
+
+class SupplierLink(Base):
+    """Pharmacy-entered synthetic demonstration relationship, never a source claim."""
+    __tablename__ = "supplier_links"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    pharmacy_id: Mapped[str] = mapped_column(ForeignKey("pharmacies.id"), index=True)
+    inventory_id: Mapped[str] = mapped_column(ForeignKey("inventory_items.id"), unique=True)
+    supplier: Mapped[str] = mapped_column(String(160))
+    distributor: Mapped[str] = mapped_column(String(160))
+    synthetic: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class InventoryImport(Base):
+    __tablename__ = "inventory_imports"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    pharmacy_id: Mapped[str] = mapped_column(ForeignKey("pharmacies.id"), index=True)
+    source: Mapped[str] = mapped_column(String(32))
+    imported: Mapped[int] = mapped_column(Integer, default=0)
+    duplicates: Mapped[int] = mapped_column(Integer, default=0)
+    rejected: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class InvestigationAttachment(Base):
+    __tablename__ = "investigation_attachments"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
+    pharmacy_id: Mapped[str] = mapped_column(ForeignKey("pharmacies.id"), index=True)
+    investigation_id: Mapped[str] = mapped_column(ForeignKey("investigations.id"), index=True)
+    filename: Mapped[str] = mapped_column(String(180))
+    content_type: Mapped[str] = mapped_column(String(50))
+    content: Mapped[bytes] = mapped_column(LargeBinary)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 
 class AuditEvent(Base):

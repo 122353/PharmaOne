@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: pharmaone-api
+    runtime: python
+    plan: free
+    rootDir: api
+    buildCommand: pip install --no-cache-dir -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1 --no-access-log
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: PHARMAONE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_AUDIENCE
+        value: authenticated
+      - key: ALLOWED_ORIGINS
+        sync: false

@@ -1,5 +1,7 @@
 # PharmaOne implementation plan
 
+> Historical BYOK-era plan. The current central-account implementation and verification status are in [implementation report](IMPLEMENTATION_REPORT.md) and [feature status](FEATURE_STATUS.md).
+
 ## Architecture
 
 Next.js App Router serves the public and authenticated UI. Supabase Auth issues access tokens. FastAPI validates the token against the project's JWKS and owns all business data in PostgreSQL. A pharmacy belongs to its creator; every private query is filtered by that owner. TinyFish runs from the backend only, with either the requesting user's encrypted BYOK key or an explicitly configured service key. Public CDSCO records are shared and deduplicated; inventory and investigations are private.

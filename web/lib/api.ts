@@ -15,8 +15,8 @@ export async function api<T>(path:string, init:RequestInit={}):Promise<T> {
   return response.json();
 }
 
-export type Alert = {fingerprint:string;product_name:string;manufacturer:string;batch_number:string;quality_issue:string;reporting_period:string;reporting_source:string;source_url:string;retrieved_at:string;classification:string};
+export type Alert = {fingerprint:string;product_name:string;manufacturer:string;batch_number:string;quality_issue:string;reporting_period:string;reporting_source:string;source_url:string;retrieved_at:string;classification:string;pharma_classify?:{model:string;version:string;category:string;confidence:number;advisory_only:boolean}};
 export type Inventory = {id:string;medicine_name:string;manufacturer:string;batch_number:string;strength:string;expiry_date:string;quantity:number;quality_state:string};
-export type Match = {id:string;status:string;explanation:Record<string,{inventory:string;source:string;aligned?:boolean;exact?:boolean}>;inventory:Inventory;alert:Alert};
+export type Match = {id:string;status:string;explanation:Record<'product'|'batch'|'manufacturer',{inventory:string;source:string;aligned?:boolean;exact?:boolean}> & {pharma_match?:{model:string;version:string;product_similarity:number;advisory_only:boolean}};inventory:Inventory;alert:Alert};
 export type Source = {state:string;last_checked:string|null;record_count:number;source_url:string;error:string};
 export type Dashboard = {pharmacy:string;inventory_count:number;potential_count:number;verification_count:number;open_investigations:number;review_queue:Match[];recent_alerts:Alert[];clarifications:string[];source:Source};

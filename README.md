@@ -1,72 +1,77 @@
 # PharmaOne AI
 
-Source-backed CDSCO NSQ review for pharmacy batch inventory. The application is an MVP; it does not direct dispensing or implement a real stock hold.
+PharmaOne reviews CDSCO NSQ records against pharmacy batch inventory. It uses Supabase Auth, FastAPI, PostgreSQL, a centrally managed TinyFish retrieval command, browser Tesseract.js OCR, small locally trained advisory models, and optional Sarvam chat, OCR, and translation. Matches require pharmacist review. A simulated hold never restricts real stock.
 
-## Status
+## Local startup
 
-- Backend API, PostgreSQL data model, Supabase JWT verification, CSV import, deterministic matching, investigation audit records, encrypted TinyFish BYOK, and TinyFish browser-agent adapter are implemented.
-- Web landing, auth, onboarding, import, dashboard, alerts, detail, investigations, inventory correction and settings are implemented.
-- One TinyFish connector run retrieved five real August 2026 CDSCO rows and an independent browser check matched all 30 compared fields. Its verified snapshot is in `evidence/` and was imported into the current ignored local SQLite database. The app's own per-user BYOK sync endpoint still awaits a configured account and live verification; no source records are silently fabricated.
-- Supabase Auth and a PostgreSQL service must be configured to exercise the complete signed-in flow. The current local integration tests use SQLite; PostgreSQL behavior has not yet been verified because the local Docker daemon was unavailable.
-
-For the current verification status, secure beginner setup, and a short hackathon walkthrough, see [MVP verification](docs/MVP_VERIFICATION.md). Use `python scripts/configure_local.py` to create ignored local Supabase and PostgreSQL settings without printing credentials.
-
-## Local run
-
-1. Create a Supabase project. Configure email/password Auth. Use its project URL and **anon/publishable** key only in the web configuration. Supabase must issue asymmetric JWTs exposed through its JWKS endpoint.
-2. Copy `.env.example` to `.env` at the repository root. Set `SUPABASE_URL`, database credentials, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `TINYFISH_ENCRYPTION_KEY`. Generate the encryption key with `python -c "import base64,os;print(base64.urlsafe_b64encode(os.urandom(32)).decode())"`. Never commit `.env`.
-3. Start the full stack:
+From `D:\PharmaOne`, configure ignored environment files if they do not exist:
 
 ```powershell
 cd D:\PharmaOne
-docker compose up --build
+python scripts\configure_local.py
 ```
 
-Open `http://localhost:3000`. API docs are at `http://localhost:8000/docs`. Sign up, create your pharmacy profile, upload a CSV, then connect your TinyFish key in Settings. Click **Sync CDSCO with my account** only when you intend to spend that account's TinyFish credits.
+Set the PostgreSQL connection and Supabase project URL in `api/.env`. Set the Supabase project URL and publishable/anon key in `web/.env.local`. The Supabase project must use asymmetric JWT signing. Keep `TINYFISH_API_KEY` and `SARVAM_API_KEY` only in `api/.env`. Both provider keys are configured locally. The central TinyFish sync completed one approved `AUG-2026` run; ten stored rows were compared against the official CDSCO database. One separately approved live Sarvam chat response passed ContextOS evidence checks and persisted a success audit. Never commit either env file. Existing local env files are not overwritten by the helper.
 
-For separate development servers:
+Run the API:
 
 ```powershell
-cd D:\PharmaOne
-docker compose up -d db
 cd D:\PharmaOne\api
 python -m pip install -r requirements.txt
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
-In another terminal:
+In a second terminal, run the web app:
 
 ```powershell
 cd D:\PharmaOne\web
-Copy-Item ..\.env.example .env.local
 npm ci
 npm run dev
 ```
 
-Set `DATABASE_URL` in `api/.env` if using separate dev servers. The root `.env` is loaded by Docker Compose; `web/.env.local` is read by Next.js. `NEXT_PUBLIC_API_URL` must be reachable in the user's browser.
+Open [http://localhost:3000](http://localhost:3000). API documentation is at [http://localhost:8000/docs](http://localhost:8000/docs). The configured database retains the prior verified snapshot and ten records from the completed central `AUG-2026` sync. Synthetic pharmacy inventory can be uploaded through CSV or imported from the clearly labeled mock ERP adapter.
+
+## Central source and AI operations
+
+Ordinary pharmacy accounts cannot set TinyFish keys or start provider syncs. With separate approval for the paid operation, an operator can run a bounded single-period sync:
+
+```powershell
+cd D:\PharmaOne\api
+python -m app.ingest_service AUG-2026 --limit 10
+```
+
+The command validates source rows, stores provenance and meaningful versions, rematches pharmacy inventory, logs run status, and refuses overlapping PostgreSQL runs. There is no scheduled national scrape. The key is not sent to the browser.
+
+`SARVAM_API_KEY` is set only in the API environment. ContextOS returns an evidence-only explanation if the provider answer is incomplete, invalid, or fails regulatory checks. Live chat passed once for batch `VRNT-933`; OCR and translation have only mocked verification and need separate approval for live calls.
+
+The scan page runs Tesseract.js in the browser and keeps images on the device. It shows raw OCR text, then requires manual correction before the API compares confirmed identifiers. The API runs PharmaMatch product similarity and PharmaClassify quality-category inference from versioned JSON artifacts in `api/model_artifacts`. Both were trained locally from synthetic examples by `python api/scripts/train_models.py`. Their predictions are advisory: exact normalized batch and conservative manufacturer checks control match status. PharmaClassify may return `unclassified`; its synthetic holdout was 6/10 and has not been clinically validated.
 
 ## Verification
 
 ```powershell
 cd D:\PharmaOne\api
-python -m pytest tests -q
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+$env:PHARMAONE_TEST_POSTGRES='1'; python -m pytest tests\test_postgres_security.py tests\test_postgres_workflow.py -q
 cd D:\PharmaOne\web
+npx tsc --noEmit
 npm run build
-npm run e2e
+npm test
 ```
 
-The browser test covers the public landing page without external credentials. One external TinyFish connector retrieval has been verified against CDSCO; full signed-in browsing, the app's own BYOK retrieval path, and PostgreSQL deployment still need configured services.
+The PostgreSQL tests use rollback protected synthetic records. Browser tests mock Supabase Auth and API responses; they do not prove live signup or paid provider calls. See the [current verification report](docs/FINAL_VERIFICATION_REPORT.md), [feature status](docs/FEATURE_STATUS.md), [manual checklist](docs/FINAL_TESTING_CHECKLIST.md), [email setup](docs/SUPABASE_EMAIL_SETUP.md), and [known limitations](docs/KNOWN_LIMITATIONS.md).
 
-## Data and safety
+## Docker
 
-The parser allows UTF-8 CSV up to 2 MB and 5,000 rows. It validates columns, quantity, ISO expiry dates and spreadsheet formulas. Missing critical identifiers remain in `Needs verification`. Matching uses conservative normalized product/manufacturer selection and exact batch comparison after case/whitespace normalization. A potential match is a review prompt. `No identified match` does not prove safety. NSQ does not automatically mean recall.
+`docker compose --env-file web/.env.local config` validates the configuration. When Docker Desktop's Linux engine is running:
 
-The TinyFish adapter requests a selected CDSCO reporting period and at most 25 records per run. Each stored row must carry that period. It stores source URL, period, retrieval timestamp, run provenance and observed revisions. It never starts automatically. The current adapter is synchronous and checks one period at a time; scheduled nationwide coverage and full pagination are not implemented. Provider failures leave previously retrieved records dated and visible.
+```powershell
+cd D:\PharmaOne
+docker compose --env-file web/.env.local up --build
+```
 
-An operator can run central ingestion with a separately funded service key: from `api`, run `python -m app.ingest_service AUG-2026 --limit 10`. Schedule that command only after choosing a budget and coverage policy. User-initiated jobs never select the service key.
+Docker runtime was unavailable during this verification. The local two-terminal startup above is the tested path. See [deployment readiness](docs/DEPLOYMENT_READINESS.md) for HTTPS, exact CORS origins, secret management, backups, spend limits, migration and restore requirements before any public release.
 
-Private data queries are owner scoped. TinyFish keys are encrypted with AES-GCM using `TINYFISH_ENCRYPTION_KEY`, separate from the database, and are never returned by the API. The service key is reserved for future administrative ingestion and cannot be selected from user accounts. In production, use HTTPS, a managed PostgreSQL backup policy, a stable encryption key from a secret manager, restricted CORS, and asymmetric Supabase JWT signing.
+## ₹0 public hosting preparation
 
-## Deployment
-
-The Dockerfiles and Compose file are deployable to a host with Docker. Provide HTTPS reverse proxy and durable PostgreSQL storage. Set `ALLOWED_ORIGINS` to the exact web origin and build `NEXT_PUBLIC_API_URL` for the public API origin. Set Supabase email redirect URLs to the deployed web origin. The API creates tables on startup; use managed migrations before evolving the schema in a running installation. Do not expose the database port publicly on production hosts.
+The checked-in [Render Free blueprint](render.yaml) and [Vercel build config](web/vercel.json) are ready for review. See the [public deployment checklist](docs/PUBLIC_DEPLOYMENT_CHECKLIST.md) and [readiness report](docs/PUBLIC_DEPLOYMENT_REPORT.md). No public deployment has been performed. The Git checkout has no remote, so GitHub push deployment first needs a new authorized repository. Keep paid TinyFish and Sarvam keys out of Render until a separate paid-call authorization; the previously retrieved CDSCO snapshot remains available from Supabase.

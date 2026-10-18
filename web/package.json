@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "test": "playwright test",
     "e2e": "playwright test"
@@ -11,6 +11,7 @@
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",
     "@supabase/supabase-js": "^2.58.0",
+    "@zxing/browser": "^0.2.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",
@@ -18,7 +19,8 @@
     "papaparse": "^5.7.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",

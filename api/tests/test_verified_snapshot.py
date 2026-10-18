@@ -89,7 +89,8 @@ def test_verified_alert_to_synthetic_pharmacy_hold_persists_and_isolated():
             assert hold.status_code == 200, hold.text
         with TestClient(app) as refreshed:
             history = refreshed.get("/api/investigations").json()
-            assert history[0]["status"] == "simulated_hold"
+            assert history[0]["status"] == "under_investigation"
+            assert history[0]["simulated_hold"] is True
             assert refreshed.get("/api/investigations/" + history[0]["id"] + "/events").json()
             identity["user"] = "synthetic-b"
             assert refreshed.put("/api/pharmacies/current", json={"name": "Synthetic Pharmacy B"}).status_code == 200

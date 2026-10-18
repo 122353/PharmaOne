@@ -1,24 +1,25 @@
-from datetime import datetime, timezone, timedelta
+from datetime import date, datetime, timezone
 from contextlib import asynccontextmanager
-import httpx
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File, Request
-from fastapi.exceptions import RequestValidationError
-from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select, desc, func
 from sqlalchemy.orm import Session
 from .auth import current_user
 from .config import settings
 from .db import get_db, initialize_schema
-from .models import Pharmacy, InventoryItem, Alert, AlertVersion, Match, Investigation, AuditEvent, TinyfishConnection, IngestionRun
+from .models import Pharmacy, InventoryItem, Alert, AlertVersion, Match, Investigation, AuditEvent, IngestionRun, InventoryImport
 from .ingestion import store_records
 from .csv_import import parse_csv
+from .inventory_service import import_rows
 from .matching import compare
-from .tinyfish import retrieve, SOURCE_URL
-from .crypto import encrypt, decrypt, fingerprint as key_fingerprint
+from .ml import pharma_classify
+from .tinyfish import SOURCE_URL
+from .contextos import router as contextos_router
+from .scan import router as scan_router
+from .suppliers import router as suppliers_router
+from .evidence import router as evidence_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,14 +28,11 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="PharmaOne API", version="0.1.0", lifespan=lifespan)
+app.include_router(contextos_router)
+app.include_router(scan_router)
+app.include_router(suppliers_router)
+app.include_router(evidence_router)
 app.add_middleware(CORSMiddleware, allow_origins=[x.strip() for x in settings().allowed_origins.split(",")], allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"], allow_headers=["Authorization", "Content-Type"])
-
-
-@app.exception_handler(RequestValidationError)
-async def safe_validation_error(request: Request, exc: RequestValidationError):
-    if request.url.path == "/api/integrations/tinyfish":
-        return JSONResponse(status_code=400, content={"detail": "Invalid TinyFish key"})
-    return await request_validation_exception_handler(request, exc)
 
 
 def fields(obj, names):
@@ -49,7 +47,8 @@ def pharmacy_for(db: Session, user: str) -> Pharmacy:
 
 
 def alert_out(alert: Alert):
-    return fields(alert, ["fingerprint", "product_name", "manufacturer", "batch_number", "quality_issue", "reporting_period", "reporting_source", "source_url", "retrieved_at", "classification"])
+    return {**fields(alert, ["fingerprint", "product_name", "manufacturer", "batch_number", "quality_issue", "reporting_period", "reporting_source", "source_url", "retrieved_at", "classification"]),
+            "pharma_classify": pharma_classify(alert.quality_issue)}
 
 
 def item_out(item: InventoryItem):
@@ -60,7 +59,7 @@ def match_out(match: Match, db: Session):
     return {**fields(match, ["id", "status", "explanation", "checked_at"]), "inventory": item_out(db.get(InventoryItem, match.inventory_id)), "alert": alert_out(db.get(Alert, match.alert_id))}
 
 
-def rerun(db: Session, pharmacy: Pharmacy):
+def rerun(db: Session, pharmacy: Pharmacy, *, commit: bool = True):
     existing = {(m.inventory_id, m.alert_id): m for m in db.scalars(select(Match).where(Match.pharmacy_id == pharmacy.id))}
     seen = set()
     alerts = db.scalars(select(Alert)).all()
@@ -81,7 +80,10 @@ def rerun(db: Session, pharmacy: Pharmacy):
                 match.explanation = {**match.explanation, "note": "Identifiers changed since this investigation was recorded."}
             else:
                 db.delete(match)
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
 
 
 class PharmacyInput(BaseModel):
@@ -131,17 +133,28 @@ async def import_inventory(file: UploadFile = File(...), user: str = Depends(cur
         rows, errors = parse_csv(raw)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
-    inserted = duplicates = 0
-    for row in rows:
-        duplicate = db.scalar(select(InventoryItem).where(InventoryItem.pharmacy_id == pharmacy.id, InventoryItem.medicine_name == row["medicine_name"], InventoryItem.manufacturer == row["manufacturer"], InventoryItem.batch_number == row["batch_number"]))
-        if duplicate:
-            duplicates += 1
-            continue
-        db.add(InventoryItem(pharmacy_id=pharmacy.id, **row))
-        inserted += 1
-    db.commit()
+    result = import_rows(db, pharmacy, rows, errors, "csv")
     rerun(db, pharmacy)
-    return {"imported": inserted, "duplicates": duplicates, "rejected": len(errors), "incomplete": sum(r["quality_state"] == "needs_verification" for r in rows), "errors": errors}
+    return result
+
+
+@app.post("/api/inventory/connectors/mock/import")
+def import_reference_erp(user: str = Depends(current_user), db: Session = Depends(get_db)):
+    """Explicitly synthetic local reference adapter; no commercial ERP connection."""
+    pharmacy = pharmacy_for(db, user)
+    sample = b"medicine_name,manufacturer,batch_number,strength,expiry_date,quantity\nSynthetic ERP Medicine,Example Manufacturer,SYN-DEMO-001,10mg,2028-01-01,3\n"
+    rows, errors = parse_csv(sample)
+    result = import_rows(db, pharmacy, rows, errors, "synthetic_mock_erp")
+    rerun(db, pharmacy)
+    return {**result, "synthetic": True}
+
+
+@app.get("/api/inventory/imports")
+def inventory_imports(user: str = Depends(current_user), db: Session = Depends(get_db)):
+    pharmacy = pharmacy_for(db, user)
+    return [fields(record, ["id", "source", "imported", "duplicates", "rejected", "created_at"])
+            for record in db.scalars(select(InventoryImport).where(InventoryImport.pharmacy_id == pharmacy.id)
+                                     .order_by(desc(InventoryImport.created_at)).limit(50))]
 
 
 @app.get("/api/inventory")
@@ -160,6 +173,13 @@ class InventoryEdit(BaseModel):
     strength: str = Field(default="", max_length=100)
     expiry_date: str = Field(default="", max_length=30)
     quantity: int = Field(ge=0, le=10_000_000)
+
+    @field_validator("expiry_date")
+    @classmethod
+    def valid_expiry(cls, value: str) -> str:
+        if value:
+            date.fromisoformat(value)
+        return value
 
 
 @app.patch("/api/inventory/{item_id}")
@@ -206,6 +226,26 @@ def alert_versions(alert_id: str, user: str = Depends(current_user), db: Session
     return [fields(v, ["id", "quality_issue", "observed_at"]) for v in db.scalars(select(AlertVersion).where(AlertVersion.alert_id == alert_id).order_by(AlertVersion.observed_at))]
 
 
+@app.get("/api/regulatory/changes")
+def regulatory_changes(user: str = Depends(current_user), db: Session = Depends(get_db)):
+    pharmacy = pharmacy_for(db, user)
+    affected = set(db.scalars(select(Match.alert_id).where(Match.pharmacy_id == pharmacy.id,
+                                                      Match.status != "no_identified_match")))
+    changes = []
+    for version in db.scalars(select(AlertVersion).order_by(desc(AlertVersion.observed_at)).limit(100)):
+        alert = db.get(Alert, version.alert_id)
+        if not alert:
+            continue
+        first = db.scalar(select(AlertVersion.id).where(AlertVersion.alert_id == version.alert_id)
+                          .order_by(AlertVersion.observed_at, AlertVersion.id).limit(1))
+        changes.append({"id": version.id, "kind": "added" if first == version.id else "updated",
+                        "alert_id": alert.fingerprint, "product_name": alert.product_name,
+                        "batch_number": alert.batch_number, "quality_issue": version.quality_issue,
+                        "source_url": alert.source_url, "observed_at": version.observed_at,
+                        "own_inventory_impact": alert.fingerprint in affected})
+    return changes
+
+
 @app.get("/api/matches")
 def matches(user: str = Depends(current_user), db: Session = Depends(get_db)):
     pharmacy = pharmacy_for(db, user)
@@ -222,13 +262,38 @@ def recheck(user: str = Depends(current_user), db: Session = Depends(get_db)):
 @app.get("/api/investigations")
 def investigations(user: str = Depends(current_user), db: Session = Depends(get_db)):
     pharmacy = pharmacy_for(db, user)
-    return [fields(i, ["id", "match_id", "status", "note", "updated_at"]) for i in db.scalars(select(Investigation).where(Investigation.pharmacy_id == pharmacy.id).order_by(desc(Investigation.updated_at)))]
+    return [investigation_out(i, db) for i in db.scalars(select(Investigation).where(Investigation.pharmacy_id == pharmacy.id).order_by(desc(Investigation.updated_at)))]
+
+
+REVIEW_STATUSES = {"open", "under_investigation", "reviewed", "closed"}
+DECISION_ACTIONS = {"investigation_" + value for value in REVIEW_STATUSES | {"physical_verification_pending", "simulated_hold"}}
+
+
+def investigation_out(record: Investigation, db: Session):
+    events = db.scalars(select(AuditEvent).where(AuditEvent.pharmacy_id == record.pharmacy_id,
+                       AuditEvent.entity_id == record.id, AuditEvent.action.in_(DECISION_ACTIONS))
+                       .order_by(AuditEvent.created_at, AuditEvent.id)).all()
+    latest = events[-1] if events else None
+    detail = latest.detail if latest and isinstance(latest.detail, dict) else {}
+    review_status = record.status if record.status in REVIEW_STATUSES else next(
+        (event.action.removeprefix("investigation_") for event in reversed(events)
+         if event.action.removeprefix("investigation_") in REVIEW_STATUSES), "under_investigation")
+    physical_verified = bool(detail.get("physical_verified"))
+    physical_status = detail.get("physical_status") if detail.get("physical_status") in {"verified", "pending", "not_recorded"} else (
+        "verified" if physical_verified else "pending" if any(
+            event.action == "investigation_physical_verification_pending" for event in events) else "not_recorded")
+    return {**fields(record, ["id", "match_id", "note", "updated_at"]),
+            "status": review_status, "physical_status": physical_status,
+            "simulated_hold": any(event.action == "investigation_simulated_hold" for event in events),
+            "record_reviewed": bool(detail.get("record_reviewed")), "physical_verified": physical_verified}
 
 
 class InvestigationInput(BaseModel):
     match_id: str
-    status: str = Field(pattern="^(open|reviewed|simulated_hold)$")
+    status: str = Field(pattern="^(open|under_investigation|physical_verification_pending|reviewed|closed|simulated_hold)$")
     note: str = Field(default="", max_length=2000)
+    record_reviewed: bool = False
+    physical_verified: bool = False
 
 
 @app.post("/api/investigations")
@@ -237,13 +302,30 @@ def save_investigation(data: InvestigationInput, user: str = Depends(current_use
     match = db.scalar(select(Match).where(Match.id == data.match_id, Match.pharmacy_id == pharmacy.id))
     if not match:
         raise HTTPException(404, "Match not found")
-    record = db.scalar(select(Investigation).where(Investigation.match_id == match.id, Investigation.pharmacy_id == pharmacy.id)) or Investigation(pharmacy_id=pharmacy.id, match_id=match.id)
-    record.status, record.note = data.status, data.note
+    existing = db.scalar(select(Investigation).where(Investigation.match_id == match.id, Investigation.pharmacy_id == pharmacy.id))
+    record = existing or Investigation(pharmacy_id=pharmacy.id, match_id=match.id)
+    previous = investigation_out(existing, db) if existing else None
+    review_status = data.status if data.status in REVIEW_STATUSES else (previous["status"] if previous else "under_investigation")
+    note = data.note if data.note.strip() or not previous else previous["note"]
+    physical_verified = data.physical_verified and data.status != "physical_verification_pending"
+    physical_status = ("pending" if data.status == "physical_verification_pending" else
+                       "verified" if physical_verified else
+                       "pending" if previous and previous["physical_status"] != "not_recorded" else "not_recorded")
+    hold = data.status == "simulated_hold" or bool(previous and previous["simulated_hold"])
+    if previous and (review_status, note, data.record_reviewed, physical_verified, physical_status, hold) == (
+        previous["status"], previous["note"], previous["record_reviewed"], previous["physical_verified"],
+        previous["physical_status"], previous["simulated_hold"]):
+        return previous
+    record.status, record.note = review_status, note
     db.add(record)
     db.flush()
-    db.add(AuditEvent(pharmacy_id=pharmacy.id, actor_id=user, action="investigation_" + data.status, entity_id=record.id, detail={"note": data.note}))
+    db.add(AuditEvent(pharmacy_id=pharmacy.id, actor_id=user, action="investigation_" + data.status,
+                      entity_id=record.id, detail={"note": note, "record_reviewed": data.record_reviewed,
+                                                   "physical_verified": physical_verified,
+                                                   "physical_status": physical_status, "simulated_hold": hold,
+                                                   "review_status": review_status}))
     db.commit()
-    return fields(record, ["id", "match_id", "status", "note", "updated_at"])
+    return investigation_out(record, db)
 
 
 @app.get("/api/investigations/{record_id}/events")
@@ -257,103 +339,9 @@ def investigation_events(record_id: str, user: str = Depends(current_user), db: 
 
 @app.get("/api/ingestion/status")
 def ingestion_status(user: str = Depends(current_user), db: Session = Depends(get_db)):
-    latest = db.scalar(select(IngestionRun).order_by(desc(IngestionRun.started_at)).limit(1))
-    success = db.scalar(select(IngestionRun).where(IngestionRun.status == "succeeded").order_by(desc(IngestionRun.finished_at)).limit(1))
+    latest = db.scalar(select(IngestionRun).where(IngestionRun.requesting_user_id.is_(None)).order_by(desc(IngestionRun.started_at)).limit(1))
+    success = db.scalar(select(IngestionRun).where(IngestionRun.requesting_user_id.is_(None), IngestionRun.status == "succeeded").order_by(desc(IngestionRun.finished_at)).limit(1))
     return {"state": latest.status if latest else "never_synced", "last_checked": success.finished_at if success else None, "record_count": success.record_count if success else 0, "source_url": SOURCE_URL, "error": latest.error if latest else ""}
-
-
-class KeyInput(BaseModel):
-    api_key: str = Field(min_length=12, max_length=500)
-
-
-@app.get("/api/integrations/tinyfish")
-def connection(user: str = Depends(current_user), db: Session = Depends(get_db)):
-    entry = db.scalar(select(TinyfishConnection).where(TinyfishConnection.user_id == user))
-    return {"connected": bool(entry), "fingerprint": entry.fingerprint if entry else None, "status": entry.status if entry else "disconnected", "last_verified_at": entry.last_verified_at if entry else None}
-
-
-@app.post("/api/integrations/tinyfish")
-def connect(data: KeyInput, user: str = Depends(current_user), db: Session = Depends(get_db)):
-    entry = db.scalar(select(TinyfishConnection).where(TinyfishConnection.user_id == user)) or TinyfishConnection(user_id=user)
-    entry.encrypted_key = encrypt(data.api_key)
-    entry.fingerprint = key_fingerprint(data.api_key)
-    entry.status = "connected"
-    db.add(entry)
-    db.commit()
-    return connection(user, db)
-
-
-@app.delete("/api/integrations/tinyfish")
-def disconnect(user: str = Depends(current_user), db: Session = Depends(get_db)):
-    entry = db.scalar(select(TinyfishConnection).where(TinyfishConnection.user_id == user))
-    if entry:
-        db.delete(entry)
-        db.commit()
-    return {"connected": False}
-
-
-@app.post("/api/integrations/tinyfish/test")
-def test_connection(user: str = Depends(current_user), db: Session = Depends(get_db)):
-    entry = db.scalar(select(TinyfishConnection).where(TinyfishConnection.user_id == user))
-    if not entry:
-        raise HTTPException(404, "Connect a TinyFish key first")
-    try:
-        response = httpx.get("https://api.search.tinyfish.ai", params={"query": "CDSCO"}, headers={"X-API-Key": decrypt(entry.encrypted_key)}, timeout=15)
-        if response.status_code in (401, 403):
-            entry.status = "invalid"
-            db.commit()
-            raise HTTPException(400, "TinyFish rejected this API key")
-        if response.status_code == 429:
-            raise HTTPException(429, "TinyFish rate limit reached")
-        response.raise_for_status()
-        entry.status = "connected"
-        entry.last_verified_at = datetime.now(timezone.utc)
-        db.commit()
-        return {"stored": True, "provider_verified": True, "message": "TinyFish accepted this key on its Search API. Browser-agent credits are checked during sync."}
-    except HTTPException:
-        raise
-    except httpx.HTTPError as exc:
-        raise HTTPException(502, "TinyFish connection could not be verified") from exc
-
-
-class SyncInput(BaseModel):
-    period: str = Field(pattern="^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-20[0-9]{2}$")
-    limit: int = Field(default=10, ge=1, le=25)
-    account: str = Field(default="mine", pattern="^(mine|service)$")
-
-
-@app.post("/api/ingestion/sync")
-def sync(data: SyncInput, user: str = Depends(current_user), db: Session = Depends(get_db)):
-    pharmacy_for(db, user)
-    if data.account != "mine":
-        raise HTTPException(403, "Service ingestion is not available from user accounts")
-    entry = db.scalar(select(TinyfishConnection).where(TinyfishConnection.user_id == user))
-    if not entry:
-        raise HTTPException(409, "Connect your own TinyFish key first")
-    recent = db.scalar(select(IngestionRun).where(IngestionRun.requesting_user_id == user, IngestionRun.started_at > datetime.now(timezone.utc) - timedelta(minutes=10)).order_by(desc(IngestionRun.started_at)).limit(1))
-    if recent:
-        raise HTTPException(429, "Wait 10 minutes between TinyFish runs")
-    run = IngestionRun(requesting_user_id=user, connection_id=entry.id, period=data.period)
-    db.add(run)
-    db.commit()
-    try:
-        records, provider_run = retrieve(decrypt(entry.encrypted_key), data.period, data.limit)
-        store_records(db, records, run.id)
-        run.status = "succeeded"
-        run.provider_run_id = provider_run
-        run.record_count = len(records)
-        run.finished_at = datetime.now(timezone.utc)
-        entry.last_verified_at = run.finished_at
-        db.commit()
-        for pharmacy in db.scalars(select(Pharmacy)):
-            rerun(db, pharmacy)
-        return {"run_id": run.id, "provider_run_id": provider_run, "status": run.status, "record_count": run.record_count}
-    except Exception as exc:
-        run.status = "failed"
-        run.error = "Provider or source retrieval failed; inspect server logs without credentials"
-        run.finished_at = datetime.now(timezone.utc)
-        db.commit()
-        raise HTTPException(502, run.error) from exc
 
 
 @app.get("/api/dashboard")

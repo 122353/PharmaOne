@@ -1,5 +1,7 @@
 # MVP verification record
 
+> Historical verification record from the initial build. For current results, see [implementation report](IMPLEMENTATION_REPORT.md).
+
 ## Live source evidence
 
 One TinyFish browser automation run used the connected TinyFish account to inspect the official [CDSCO NSQ database](https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug), select August 2026, and extract five rows. The [run record](https://agent.tinyfish.ai/runs/7d650bd4-71e6-49dc-b967-f95304ecb6aa) and [captured values](../evidence/cdsco-aug-2026-tinyfish.json) identify the source and provider run. An independent Playwright browser visit selected the same filters and compared product, manufacturer, batch, NSQ result, reporting source, and period for each row: **30 of 30 fields matched**. The [verification report](../evidence/cdsco-verification-report.json) includes the UTC check time and a SHA-256 digest of the exact captured snapshot. Rerun the comparison without another TinyFish charge:
