@@ -1,6 +1,6 @@
 # Deployment readiness and recovery
 
-**Status: local deployment verified; public production deployment not approved or tested.** The Docker Compose file parses, but Docker Desktop's Linux engine was unavailable during verification. The tested path is the two-terminal local startup in [README](../README.md).
+**Status: local deployment verified; first free public deployment approved but not yet tested.** The Docker Compose file parses, but Docker Desktop's Linux engine was unavailable during verification. The tested path is the two-terminal local startup in [README](../README.md).
 
 ## Before a public deployment
 
