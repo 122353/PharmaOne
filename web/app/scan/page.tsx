@@ -39,6 +39,9 @@ function Scanner(){
     setBusy(true);setError('');setResult(null);setOriginal('');setFields(blank);
     setOcrProgress(t('Reading package with Sarvam AI…','Sarvam AI से पैकेज पढ़ा जा रहा है…'));
     try{
+      // Prefer the server-side Sarvam route so provider credentials never reach the browser.
+      // If that provider path is unavailable, the catch block intentionally falls back
+      // to local OCR without silently confirming any extracted identifier.
       const body=new FormData();body.append('file',file);
       const response=await api<SarvamOCR>('/api/scan/ocr',{method:'POST',body});
       const extracted=response.fields||blank;
