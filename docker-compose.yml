@@ -3,7 +3,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-only-password}
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the ignored local .env file}"
       POSTGRES_DB: pharmaone
     ports:
       - "127.0.0.1:5432:5432"
@@ -20,7 +20,7 @@ services:
     volumes:
       - ./evidence:/evidence:ro
     environment:
-      DATABASE_URL: postgresql+psycopg://postgres:${POSTGRES_PASSWORD:-local-only-password}@db:5432/pharmaone
+      DATABASE_URL: "postgresql+psycopg://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the ignored local .env file}@db:5432/pharmaone"
     ports:
       - "127.0.0.1:8000:8000"
     healthcheck:

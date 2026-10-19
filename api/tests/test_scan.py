@@ -33,18 +33,18 @@ def client():
 def test_scan_exact_batch_and_missing_batch(client):
     http, sessions = client
     with sessions() as db:
-        db.add(Alert(**normalize_record({"product_name": "Drug A", "manufacturer": "Maker A", "batch_number": "B12", "quality_issue": "Dissolution", "reporting_period": "AUG-2026"}, "AUG-2026"), run_id="run-1"))
+        db.add(Alert(**normalize_record({"product_name": "Drug A Tablet 10mg", "manufacturer": "Maker A", "batch_number": "B12", "quality_issue": "Dissolution", "reporting_period": "AUG-2026"}, "AUG-2026"), run_id="run-1"))
         db.commit()
-    exact = http.post('/api/scan/match', json={"medicine_name": "Drug A", "manufacturer": "Maker A", "batch_number": "B12", "confirmed": True})
+    exact = http.post('/api/scan/match', json={"medicine_name": "Drug A Tablet 10mg", "manufacturer": "Maker A", "batch_number": "B12", "confirmed": True})
     assert exact.status_code == 200
     assert exact.json()['matches'][0]['status'] == 'potential_match'
     assert exact.json()['matches'][0]['alert']['batch_number'] == 'B12'
     assert exact.json()['matches'][0]['explanation']['pharma_match']['model'] == 'PharmaMatch'
     assert exact.json()['matches'][0]['alert']['pharma_classify']['category'] == 'dissolution'
-    missing = http.post('/api/scan/match', json={"medicine_name": "Drug A", "manufacturer": "Maker A", "batch_number": "", "confirmed": True})
+    missing = http.post('/api/scan/match', json={"medicine_name": "Drug A Tablet 10mg", "manufacturer": "Maker A", "batch_number": "", "confirmed": True})
     assert missing.json()['matches'][0]['status'] == 'needs_verification'
     assert http.post('/api/scan/match', json={"medicine_name": "Drug A", "batch_number": "B12", "confirmed": False}).status_code == 400
-    wrong = http.post('/api/scan/match', json={"medicine_name": "Drug A", "manufacturer": "Maker A", "batch_number": "B13", "confirmed": True})
+    wrong = http.post('/api/scan/match', json={"medicine_name": "Drug A Tablet 10mg", "manufacturer": "Maker A", "batch_number": "B13", "confirmed": True})
     assert wrong.json()['matches'] == []
 
 
@@ -111,4 +111,6 @@ def test_ocr_missing_or_wrong_batch_needs_human_correction(client):
     wrong = http.post('/api/scan/match', json={**base, "batch_number": "B13"})
     assert wrong.status_code == 200 and wrong.json()['matches'] == []
     corrected = http.post('/api/scan/match', json={**base, "batch_number": "B12"})
-    assert corrected.json()['matches'][0]['status'] == 'potential_match'
+    # Correcting only the batch cannot supply the missing strength/formulation.
+    assert corrected.json()['matches'][0]['status'] == 'needs_verification'
+    assert corrected.json()['matches'][0]['explanation']['strength']['aligned'] is None

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from PIL import Image, UnidentifiedImageError
 
 from .auth import current_user
+from .rate_limit import sensitive_user
 from .config import settings
 from .db import get_db
 from .matching import compare
@@ -41,7 +42,7 @@ class ConfirmedScan(BaseModel):
 
 
 @router.post("/api/scan/match")
-def scan_match(data: ConfirmedScan, user: str = Depends(current_user), db: Session = Depends(get_db)):
+def scan_match(data: ConfirmedScan, user: str = Depends(sensitive_user), db: Session = Depends(get_db)):
     pharmacy_for(db, user)
     if not data.confirmed:
         raise HTTPException(400, "Confirm the extracted identifiers before matching")
@@ -63,7 +64,7 @@ def scan_match(data: ConfirmedScan, user: str = Depends(current_user), db: Sessi
 
 
 @router.post("/api/scan/ocr")
-async def scan_ocr(file: UploadFile = File(...), user: str = Depends(current_user),
+async def scan_ocr(file: UploadFile = File(...), user: str = Depends(sensitive_user),
                    db: Session = Depends(get_db), provider=Depends(sarvam_service)):
     pharmacy = pharmacy_for(db, user)
     raw = await file.read(5 * 1024 * 1024 + 1)

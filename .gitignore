@@ -1,6 +1,7 @@
 .env
 **/.env
 **/.env.local
+**/.cache/
 **/__pycache__/
 .pytest_cache/
 .venv/
@@ -8,6 +9,9 @@ node_modules/
 .next/
 coverage/
 *.db
+*.db.sync.lock
+*.log
+demo/monitoring-history.local.json
 playwright-report/
 test-results/
 *.tsbuildinfo

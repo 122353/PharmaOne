@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .auth import current_user
+from .rate_limit import sensitive_user
 from .db import get_db
 from .models import AuditEvent, Investigation, InvestigationAttachment, Pharmacy
 
@@ -31,7 +32,7 @@ def metadata(item: InvestigationAttachment) -> dict:
 
 
 @router.post("/api/investigations/{record_id}/attachments")
-async def upload_evidence(record_id: str, file: UploadFile = File(...), user: str = Depends(current_user),
+async def upload_evidence(record_id: str, file: UploadFile = File(...), user: str = Depends(sensitive_user),
                           db: Session = Depends(get_db)):
     pharmacy, record = owner(db, user, record_id)
     raw = await file.read(2 * 1024 * 1024 + 1)

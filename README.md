@@ -1,77 +1,44 @@
 # PharmaOne AI
 
-PharmaOne reviews CDSCO NSQ records against pharmacy batch inventory. It uses Supabase Auth, FastAPI, PostgreSQL, a centrally managed TinyFish retrieval command, browser Tesseract.js OCR, small locally trained advisory models, and optional Sarvam chat, OCR, and translation. Matches require pharmacist review. A simulated hold never restricts real stock.
+PharmaOne is a prototype that joins public CDSCO Not of Standard Quality (NSQ) records to pharmacy batch inventory and routes possible matches to pharmacist review. An NSQ finding is not automatically a recall, and the app never blocks dispensing.
 
-## Local startup
+## Current local evidence
 
-From `D:\PharmaOne`, configure ignored environment files if they do not exist:
+The workspace demo uses the verified historical TinyFish snapshot in `evidence/cdsco-aug-2026-tinyfish.json`. Its reporting period is **AUG-2026**. The local SQLite database currently contains five regulatory records, three synthetic inventory rows, two potential matches, and two notification records. Both notifications are already acknowledged. No live source check is recorded; this is historical playback, not continuous monitoring.
 
-```powershell
-cd D:\PharmaOne
-python scripts\configure_local.py
-```
+No production deployment, production database, or paid TinyFish/Sarvam call was used in this work. Do not run the operator ingestion command for the offline demo.
 
-Set the PostgreSQL connection and Supabase project URL in `api/.env`. Set the Supabase project URL and publishable/anon key in `web/.env.local`. The Supabase project must use asymmetric JWT signing. Keep `TINYFISH_API_KEY` and `SARVAM_API_KEY` only in `api/.env`. Both provider keys are configured locally. The central TinyFish sync completed one approved `AUG-2026` run; ten stored rows were compared against the official CDSCO database. One separately approved live Sarvam chat response passed ContextOS evidence checks and persisted a success audit. Never commit either env file. Existing local env files are not overwritten by the helper.
+## Start locally
 
-Run the API:
+The API is configured for the workspace SQLite database. From PowerShell:
 
 ```powershell
-cd D:\PharmaOne\api
-python -m pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --port 8000
+Set-Location 'D:\PharmaOne - Copy\api'
+$env:PHARMAONE_ENV = 'local'
+$env:DATABASE_URL = 'sqlite:///./pharmaone_development.db'
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --port 8000
 ```
 
-In a second terminal, run the web app:
+In a second terminal:
 
 ```powershell
-cd D:\PharmaOne\web
-npm ci
-npm run dev
+Set-Location 'D:\PharmaOne - Copy\web'
+npm.cmd run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). API documentation is at [http://localhost:8000/docs](http://localhost:8000/docs). The configured database retains the prior verified snapshot and ten records from the completed central `AUG-2026` sync. Synthetic pharmacy inventory can be uploaded through CSV or imported from the clearly labeled mock ERP adapter.
+Open [http://localhost:3000](http://localhost:3000). The API docs are at [http://localhost:8000/docs](http://localhost:8000/docs). The existing Supabase Auth integration needs a suitable test project/account; use only an approved test identity. Keep provider and database secrets in ignored server-side environment files. Never place a service-role key, TinyFish key, or Sarvam key in a `NEXT_PUBLIC_*` variable.
 
-## Central source and AI operations
+Before any database command, set both local environment variables above and verify the resolved engine is SQLite and the database file is inside this workspace. The application uses PostgreSQL in production, but no PostgreSQL or production database was touched here.
 
-Ordinary pharmacy accounts cannot set TinyFish keys or start provider syncs. With separate approval for the paid operation, an operator can run a bounded single-period sync:
+## Demo and verification
 
-```powershell
-cd D:\PharmaOne\api
-python -m app.ingest_service AUG-2026 --limit 10
-```
+- [Four-minute demo and architecture](docs/HACKATHON_DEMO.md)
+- [Matching evaluation](docs/matching-evaluation.md)
+- [Database migration plan](api/migrations/README.md)
+- [Known limitations](docs/KNOWN_LIMITATIONS.md)
+- [Deployment readiness](docs/DEPLOYMENT_READINESS.md)
+- [Current verification report](docs/FINAL_VERIFICATION_REPORT.md)
 
-The command validates source rows, stores provenance and meaningful versions, rematches pharmacy inventory, logs run status, and refuses overlapping PostgreSQL runs. There is no scheduled national scrape. The key is not sent to the browser.
+Run the API tests from `api/` with the explicit SQLite environment. Frontend checks from `web/` are `npx.cmd tsc --noEmit`, `npm.cmd run build`, and `npm.cmd test -- --workers=1`. PostgreSQL integration tests require a separately configured isolated database and were skipped here.
 
-`SARVAM_API_KEY` is set only in the API environment. ContextOS returns an evidence-only explanation if the provider answer is incomplete, invalid, or fails regulatory checks. Live chat passed once for batch `VRNT-933`; OCR and translation have only mocked verification and need separate approval for live calls.
-
-The scan page runs Tesseract.js in the browser and keeps images on the device. It shows raw OCR text, then requires manual correction before the API compares confirmed identifiers. The API runs PharmaMatch product similarity and PharmaClassify quality-category inference from versioned JSON artifacts in `api/model_artifacts`. Both were trained locally from synthetic examples by `python api/scripts/train_models.py`. Their predictions are advisory: exact normalized batch and conservative manufacturer checks control match status. PharmaClassify may return `unclassified`; its synthetic holdout was 6/10 and has not been clinically validated.
-
-## Verification
-
-```powershell
-cd D:\PharmaOne\api
-python -m pip install -r requirements-dev.txt
-python -m pytest -q
-$env:PHARMAONE_TEST_POSTGRES='1'; python -m pytest tests\test_postgres_security.py tests\test_postgres_workflow.py -q
-cd D:\PharmaOne\web
-npx tsc --noEmit
-npm run build
-npm test
-```
-
-The PostgreSQL tests use rollback protected synthetic records. Browser tests mock Supabase Auth and API responses; they do not prove live signup or paid provider calls. See the [current verification report](docs/FINAL_VERIFICATION_REPORT.md), [feature status](docs/FEATURE_STATUS.md), [manual checklist](docs/FINAL_TESTING_CHECKLIST.md), [email setup](docs/SUPABASE_EMAIL_SETUP.md), and [known limitations](docs/KNOWN_LIMITATIONS.md).
-
-## Docker
-
-`docker compose --env-file web/.env.local config` validates the configuration. When Docker Desktop's Linux engine is running:
-
-```powershell
-cd D:\PharmaOne
-docker compose --env-file web/.env.local up --build
-```
-
-Docker runtime was unavailable during this verification. The local two-terminal startup above is the tested path. See [deployment readiness](docs/DEPLOYMENT_READINESS.md) for HTTPS, exact CORS origins, secret management, backups, spend limits, migration and restore requirements before any public release.
-
-## ₹0 public hosting preparation
-
-The checked-in [Render Free blueprint](render.yaml) and [Vercel build config](web/vercel.json) are ready for review. See the [public deployment checklist](docs/PUBLIC_DEPLOYMENT_CHECKLIST.md) and [readiness report](docs/PUBLIC_DEPLOYMENT_REPORT.md). No public deployment has been performed. The Git checkout has no remote, so GitHub push deployment first needs a new authorized repository. Keep paid TinyFish and Sarvam keys out of Render until a separate paid-call authorization; the previously retrieved CDSCO snapshot remains available from Supabase.
+TinyFish retrieval is an operator-controlled, bounded operation. The offline demo needs no provider call. MiniLM is optional, local-cache-only, and candidate-retrieval evidence cannot confirm a match. Match explanations require exact batch evidence and conservative product/manufacturer/strength checks; ambiguous cases go to verification.

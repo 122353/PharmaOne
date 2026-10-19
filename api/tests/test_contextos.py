@@ -51,7 +51,7 @@ def test_contextos_grounded_and_isolated(client):
         assert data['mode'] == 'sarvam'
         assert data['evidence'][0]['batch_number'] == 'TG261185'
         assert data['evidence'][0]['source_url'].startswith('https://cdscoonline.gov.in/')
-        assert data['inventory_match'] == 'potential_match'
+        assert data['inventory_match'] == 'needs_verification'
         identity['user'] = 'user-b'
         http.put('/api/pharmacies/current', json={"name": "B Pharmacy"})
         other = http.post('/api/contextos/ask', json={"question": "Do I have it?", "alert_id": alert_id})

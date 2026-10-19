@@ -1,0 +1,418 @@
+{
+  "dataset_name": "PharmaOne synthetic matcher v2",
+  "data_status": "synthetic evaluation cases; not CDSCO evidence and not clinical validation",
+  "cases": [
+    {
+      "id": "p1_exact_linezolid",
+      "label": "positive",
+      "item": {
+        "medicine_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": "600mg"
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt. Ltd., Suketi Road, Kala Amb",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "positive",
+      "rationale": "Existing synthetic exact/normalized identity"
+    },
+    {
+      "id": "p2_spacing_variant",
+      "label": "positive",
+      "item": {
+        "medicine_name": "Linezolid Tablet 600 mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Private Limited",
+        "batch_number": "TG261185",
+        "strength": "600 mg"
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "positive",
+      "rationale": "Existing synthetic exact/normalized identity"
+    },
+    {
+      "id": "p3_mass_conversion",
+      "label": "positive",
+      "item": {
+        "medicine_name": "Linezolid Tablet 0.6g",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": "0.6g"
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "positive",
+      "rationale": "Existing synthetic exact/normalized identity"
+    },
+    {
+      "id": "p4_concentration_conversion",
+      "label": "positive",
+      "item": {
+        "medicine_name": "Paracetamol Oral Suspension 100mg/5ml",
+        "manufacturer": "Example Labs Pvt Ltd",
+        "batch_number": "P-100",
+        "strength": "100mg/5ml"
+      },
+      "alert": {
+        "product_name": "Paracetamol Oral Suspension 20mg/ml",
+        "manufacturer": "Example Laboratories",
+        "batch_number": "P-100"
+      },
+      "retrieval_label": "positive",
+      "rationale": "Existing synthetic exact/normalized identity"
+    },
+    {
+      "id": "p5_combination",
+      "label": "positive",
+      "item": {
+        "medicine_name": "Amoxicillin Clavulanate Tablets 500mg 125mg",
+        "manufacturer": "Example Labs",
+        "batch_number": "AC-5",
+        "strength": "500mg + 125mg"
+      },
+      "alert": {
+        "product_name": "Amoxicillin Clavulanate Tablets 500 mg + 125 mg",
+        "manufacturer": "Example Laboratories",
+        "batch_number": "AC-5"
+      },
+      "retrieval_label": "positive",
+      "rationale": "Existing synthetic exact/normalized identity"
+    },
+    {
+      "id": "p6_manufacturer_address",
+      "label": "positive",
+      "item": {
+        "medicine_name": "Albendazole Tablets IP 400mg",
+        "manufacturer": "Pure & Cure Healthcare Pvt Ltd",
+        "batch_number": "ANE01AOB",
+        "strength": "400mg"
+      },
+      "alert": {
+        "product_name": "Albendazole Tablets IP 400mg",
+        "manufacturer": "Pure & Cure Healthcare Pvt. Ltd. Plot No. 26A, Sector 8A",
+        "batch_number": "ANE01AOB"
+      },
+      "retrieval_label": "positive",
+      "rationale": "Existing synthetic exact/normalized identity"
+    },
+    {
+      "id": "n1_wrong_batch",
+      "label": "negative",
+      "item": {
+        "medicine_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "WRONG-1",
+        "strength": "600mg"
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "negative",
+      "rationale": "Known incompatible pair"
+    },
+    {
+      "id": "n2_different_ingredient",
+      "label": "negative",
+      "item": {
+        "medicine_name": "Ampicillin Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": "600mg"
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "negative",
+      "rationale": "Known incompatible pair"
+    },
+    {
+      "id": "n3_different_form",
+      "label": "negative",
+      "item": {
+        "medicine_name": "Linezolid Capsules 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": "600mg"
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "negative",
+      "rationale": "Known incompatible pair"
+    },
+    {
+      "id": "n4_different_release",
+      "label": "negative",
+      "item": {
+        "medicine_name": "Linezolid Extended Release Tablets 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": "600mg"
+      },
+      "alert": {
+        "product_name": "Linezolid Immediate Release Tablets 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "negative",
+      "rationale": "Known incompatible pair"
+    },
+    {
+      "id": "n5_different_combination",
+      "label": "negative",
+      "item": {
+        "medicine_name": "Amoxicillin Clavulanate Tablets 500mg 125mg",
+        "manufacturer": "Example Labs",
+        "batch_number": "AC-5",
+        "strength": "500mg + 125mg"
+      },
+      "alert": {
+        "product_name": "Amoxicillin Tablets 500mg",
+        "manufacturer": "Example Labs",
+        "batch_number": "AC-5"
+      },
+      "retrieval_label": "negative",
+      "rationale": "Known incompatible pair"
+    },
+    {
+      "id": "a1_wrong_strength",
+      "label": "ambiguous",
+      "item": {
+        "medicine_name": "Linezolid Tablets IP 300mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": "300mg"
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "ambiguous",
+      "rationale": "Incomplete, conflicting, or unverified evidence"
+    },
+    {
+      "id": "a2_missing_batch",
+      "label": "ambiguous",
+      "item": {
+        "medicine_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "",
+        "strength": "600mg"
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "ambiguous",
+      "rationale": "Incomplete, conflicting, or unverified evidence"
+    },
+    {
+      "id": "a3_missing_manufacturer",
+      "label": "ambiguous",
+      "item": {
+        "medicine_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "",
+        "batch_number": "TG261185",
+        "strength": "600mg"
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "ambiguous",
+      "rationale": "Incomplete, conflicting, or unverified evidence"
+    },
+    {
+      "id": "a4_name_field_conflict",
+      "label": "ambiguous",
+      "item": {
+        "medicine_name": "Linezolid Tablets IP 300mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": "600mg"
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "ambiguous",
+      "rationale": "Incomplete, conflicting, or unverified evidence"
+    },
+    {
+      "id": "a5_maker_conflict",
+      "label": "ambiguous",
+      "item": {
+        "medicine_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Unrelated Labs Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": "600mg"
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "ambiguous",
+      "rationale": "Incomplete, conflicting, or unverified evidence"
+    },
+    {
+      "id": "a6_one_sided_missing_strength",
+      "label": "ambiguous",
+      "item": {
+        "medicine_name": "Linezolid Tablets IP",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": ""
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "ambiguous",
+      "rationale": "Incomplete, conflicting, or unverified evidence"
+    },
+    {
+      "id": "a7_unknown_brand_alias",
+      "label": "ambiguous",
+      "item": {
+        "medicine_name": "Zyolid Tablet 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": "600mg"
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "ambiguous",
+      "rationale": "Incomplete, conflicting, or unverified evidence"
+    },
+    {
+      "id": "v1_linezolid_ocr",
+      "label": "ambiguous",
+      "item": {
+        "medicine_name": "Linezolld Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": "600mg"
+      },
+      "alert": {
+        "product_name": "Linezolid Tablets IP 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt. Ltd., Suketi Road, Kala Amb",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "positive",
+      "rationale": "Single-character synthetic OCR substitution: lower-case l substituted for i in Linezolid."
+    },
+    {
+      "id": "v2_paracetamol_ocr",
+      "label": "ambiguous",
+      "item": {
+        "medicine_name": "Paracetarnol Oral Suspension 100mg/5ml",
+        "manufacturer": "Example Labs Pvt Ltd",
+        "batch_number": "P-100",
+        "strength": "100mg/5ml"
+      },
+      "alert": {
+        "product_name": "Paracetamol Oral Suspension 20mg/ml",
+        "manufacturer": "Example Laboratories",
+        "batch_number": "P-100"
+      },
+      "retrieval_label": "positive",
+      "rationale": "Synthetic OCR substitution: rn substituted for m in Paracetamol."
+    },
+    {
+      "id": "v3_combination_spacing",
+      "label": "ambiguous",
+      "item": {
+        "medicine_name": "Amoxicil lin Clavulanate Tablets 500mg 125mg",
+        "manufacturer": "Example Labs",
+        "batch_number": "AC-5",
+        "strength": "500mg + 125mg"
+      },
+      "alert": {
+        "product_name": "Amoxicillin Clavulanate Tablets 500 mg + 125 mg",
+        "manufacturer": "Example Laboratories",
+        "batch_number": "AC-5"
+      },
+      "retrieval_label": "positive",
+      "rationale": "Synthetic OCR inserts whitespace inside Amoxicillin; component strengths remain unchanged."
+    },
+    {
+      "id": "a8_both_missing_strength",
+      "label": "ambiguous",
+      "item": {
+        "medicine_name": "Linezolid Tablet",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": ""
+      },
+      "alert": {
+        "product_name": "Linezolid Tablet",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt. Ltd., Suketi Road, Kala Amb",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "ambiguous",
+      "rationale": "Critical product identity information is missing; pharmacist verification is required."
+    },
+    {
+      "id": "a9_both_missing_form",
+      "label": "ambiguous",
+      "item": {
+        "medicine_name": "Linezolid 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": ""
+      },
+      "alert": {
+        "product_name": "Linezolid 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt. Ltd., Suketi Road, Kala Amb",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "ambiguous",
+      "rationale": "Critical product identity information is missing; pharmacist verification is required."
+    },
+    {
+      "id": "a10_missing_name",
+      "label": "ambiguous",
+      "item": {
+        "medicine_name": "",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt Ltd",
+        "batch_number": "TG261185",
+        "strength": ""
+      },
+      "alert": {
+        "product_name": "Linezolid Tablet 600mg",
+        "manufacturer": "Symbiosis Pharmaceuticals Pvt. Ltd., Suketi Road, Kala Amb",
+        "batch_number": "TG261185"
+      },
+      "retrieval_label": "ambiguous",
+      "rationale": "Critical product identity information is missing; pharmacist verification is required."
+    }
+  ],
+  "label_definitions": {
+    "label": "Final potential-match classification. Positive requires deterministic compatible product, batch, maker, strength and formulation; ambiguous requires review.",
+    "retrieval_label": "Candidate retrieval. Positive includes known synthetic transcription variants with compatible identifiers; negative is an incompatible pair; ambiguous has missing/conflicting evidence or an unverified alias."
+  }
+}

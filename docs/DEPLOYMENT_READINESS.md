@@ -1,25 +1,34 @@
 # Deployment readiness and recovery
 
-**Status: local deployment verified; first free public deployment approved but not yet tested.** The Docker Compose file parses, but Docker Desktop's Linux engine was unavailable during verification. The tested path is the two-terminal local startup in [README](../README.md).
+**Status: local prototype only. No deployment was requested or performed.** The production Vercel, Render, Supabase, and provider configurations remain unchanged. All code changes and database checks in this task stayed inside the local workspace; the active demo database is SQLite.
 
-## Before a public deployment
+## Before any future deployment
 
-1. Use the existing Supabase Free PostgreSQL project through its IPv4 compatible session pooler and HTTPS hostnames for web and API. Only the Supabase project URL, publishable key and public API URL may be exposed as `NEXT_PUBLIC_*` build variables. Never put the Supabase service-role key in the browser.
-2. Use the reviewed [Render blueprint](../render.yaml) on the Free plan with one worker. Set `DATABASE_URL`, `SUPABASE_URL` and exact HTTPS `ALLOWED_ORIGINS` in Render secret prompts; `PHARMAONE_ENV=production` rejects SQLite and insecure origins. Set `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in Vercel for Production and Preview. Do not configure paid TinyFish or Sarvam keys in the hosted service under the ₹0 budget. Cached CDSCO evidence remains visible with its retrieval timestamp.
-3. Configure Supabase Authentication URL allowlists and verified custom SMTP using [email setup](SUPABASE_EMAIL_SETUP.md). Test signup confirmation, password reset, logout and a second confirmed account before opening registration.
-4. Verify the providers' HTTPS ingress and upload limits; the API limits CSVs to 2 MB and optional images to 5 MB. Use `/health` on the API. Access logs are disabled in the Render start command. Do not log authorization headers or request bodies.
-5. Install `api/requirements-dev.txt` locally and run `python -m pytest tests -q`, the opt-in PostgreSQL suite, `npx tsc --noEmit`, `npm run build`, `npm test`, `python scripts/check_secret_leaks.py`, and `docker compose --env-file web/.env.local config -q` before release. Confirm no local `.env` files or provider keys enter an image or repository.
-6. Establish a versioned migration and backup process before applying schema changes to a production database. Current startup uses SQLAlchemy `create_all` and RLS/grant setup; it does **not** safely migrate existing columns. Do not treat successful startup as migration verification.
-7. Render Free has 512 MB RAM and can sleep after inactivity; Vercel Hobby is restricted to personal, non-commercial use. Confirm account billing settings before provisioning. Do not add a payment method or enable overage billing. Paid TinyFish/Sarvam operations stay local and manual under separate authorization.
+1. Obtain explicit approval for the target environment and deployment window. Prepare an isolated staging project first; do not point local tests at production.
+2. Review the deployment provider's current plan, memory, sleep, build, and billing limits. Do not enable overage billing or add a payment method without approval. Keep TinyFish/Sarvam calls disabled until a separate cost-bounded approval exists.
+3. Set API environment to production only in the approved hosted service. Require PostgreSQL, HTTPS, and exact HTTPS CORS origins. Keep the Supabase service-role, JWT, database, TinyFish, and Sarvam credentials server-side; expose only the Supabase public key and API origin to the browser.
+4. Configure authentication redirects and verified SMTP, then complete signup, reset-password, logout/login, and two-pharmacy isolation checks using test accounts.
+5. Review and apply [the additive PostgreSQL migrations](../api/migrations/README.md) with a migration role after a backup. API startup checks that required PostgreSQL columns exist; it does not run `create_all()`, apply DDL, or change grants. The SQL migration has not been executed against PostgreSQL in this task.
+6. Run the backend suite against SQLite and an isolated PostgreSQL database, TypeScript, production build, browser suite, dependency audits, and secret scans. Confirm environment files, SQLite DBs, logs, caches, and monitoring history remain ignored.
+7. Test backup restoration, health monitoring, access/error logging, provider limits, and incident/key rotation procedures before serving real pharmacy inventory.
 
-## Backup and restore exercise
+## Scheduling proposal
 
-Use the managed database provider's encrypted, scheduled backups and record retention period. Before any production migration, take a fresh backup and verify that a staging restore contains expected row counts and tenant/RLS policies. For a self-hosted PostgreSQL instance, `pg_dump -Fc` and `pg_restore` are suitable tools, but use credentials supplied by the deployment secret manager and a private backup destination; never commit dumps or paste connection strings into chat. Exercise restoration with synthetic records, not by overwriting the live database.
+Do not run an in-process scheduler inside a sleeping web worker. If recurring retrieval is later approved, use a single one-shot scheduled job or operator-triggered command that:
+- accepts one reporting period and enforces the existing row bound;
+- uses a database lock to prevent overlap;
+- checks an explicit spend ceiling and kill switch before calling TinyFish;
+- stores sanitized run provenance and source status;
+- deduplicates unchanged records and notifies only on new or materially changed evidence.
 
-## Secret rotation
+The proposed schedule is disabled. The current demo is offline and requires no paid provider call.
 
-Rotate keys in the provider dashboards or deployment secret manager during a planned maintenance window. Update backend secrets, restart the API, perform one health and authorized read test, then revoke the old key. Rotate Supabase JWT signing keys only with a tested overlap procedure so current sessions are not unexpectedly invalidated. Do not print old or new keys in logs or tickets.
+## Backup, rollback, and recovery
 
-## Local Docker smoke test when the engine is available
+Use the managed PostgreSQL provider's encrypted backups only after a deployment is approved. Before a migration, take a fresh backup and verify a staging restore. Roll back application code while retaining the additive notification/provenance tables and rows; do not drop tables as an automatic rollback. See the migration guide for the safe data-preserving rollback procedure.
 
-From `D:\PharmaOne`, run `docker compose --env-file web/.env.local up --build`, check `docker compose ps`, open `http://localhost:3000/`, and check `http://localhost:8000/health`. The Compose stack uses a fresh local PostgreSQL volume; it does not automatically contain the prior Supabase TinyFish records. Do not claim the CDSCO workflow is live in the container until official records are imported or a separately approved sync is run.
+Rotate keys through the provider's secret manager during a planned window. Update server-side values, verify health and an authorized test read, then revoke the old key. Never paste credentials or connection strings into source files, tickets, or logs.
+
+## Local Docker
+
+Docker runtime was not exercised. A parsed Compose file would only validate static configuration, not prove the stack can start or that it contains the verified evidence snapshot. Use SQLite local startup for the current demo.

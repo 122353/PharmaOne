@@ -1,21 +1,15 @@
-# ₹0 public deployment checklist
+# Production change checklist
 
-Status on 18 October 2026. This checklist tracks the requested Vercel + Render + existing Supabase architecture. Creating this file does not deploy anything.
+**Status on 19 October 2026: no production change was authorized or performed in this task.** The existing public deployment described by the user must remain unchanged. The earlier checked boxes and approval language in this file were historical and are superseded by this status.
 
-- [x] Inspect Next.js, FastAPI, Supabase, TinyFish, Sarvam, Docker, tests and local env structure; preserve existing records and uncommitted work.
-- [x] Confirm prior live TinyFish run and ten stored official CDSCO rows; do not spend another retrieval credit for this deployment.
-- [x] Add browser Tesseract.js OCR with raw text, manual correction, and server-side identifier verification. Retain optional server Sarvam OCR only as a separate paid path.
-- [x] Verify browser OCR with a real synthetic image and production build; phone viewport was verified on landing. Physical phone camera remains unverified.
-- [x] Train small PharmaMatch and PharmaClassify advisory models from synthetic examples; store reproducible JSON artifacts, expose real inference, and retain hard batch/manufacturer checks. Synthetic holdout was 12/12 and 6/10 respectively; real-world validation remains open.
-- [x] Add Render Free API configuration and Vercel frontend configuration without including secrets in Git.
-- [x] Verify backend memory and latency locally with both models loaded: 90.8 MB working set, 71.9 MB private memory; 20 `/health` requests median 2.9 ms, p95 8.8 ms. Measure public cold start after deployment.
-- [x] Run backend (102 passed, 3 opt-in skipped), PostgreSQL (3 passed), TypeScript, browser (9 passed), webpack production-build and secret-scan regression checks. Local Turbopack repeat builds hit a Windows child-process error; the supported webpack build passed and is now the deployment build command.
-- [ ] Confirm Vercel, Render and Supabase authentication and zero-charge account settings. Vercel CLI is authenticated to `rupeshnitya-8731` on a Hobby team; the `pharmaone-ai` project is linked to `web/`, and its two browser-public Supabase settings are configured for Production and Preview. Render account and billing settings are not yet verified. Do not add a payment method or enable billing.
-- [ ] Identify and connect an authorized GitHub remote. The current repository has no remote; no provider can auto-deploy it yet.
-- [ ] Obtain the Render HTTPS URL; configure Vercel's public API URL and exact backend CORS origin. Configure Supabase Auth redirect URLs for the final frontend hostname.
-- [ ] Verify both public URLs, authenticated persistence, browser OCR, matching, official evidence, investigation and tenant isolation using disposable accounts.
-- [ ] Record URLs, tests, RAM/latency, known defects and blocked items in the final report.
+Before a future production change:
 
-The two new models are trained only on disclosed synthetic examples, have no clinical validation, and cannot override the deterministic batch/manufacturer gates. The user confirmed no existing trained artifacts and requested that these models be built.
+1. Obtain explicit approval for the exact target, action, change window, and rollback owner.
+2. Prepare an isolated staging environment and verify its database URL, auth project, CORS origins, and provider keys.
+3. Review the additive migrations in [the migration guide](../api/migrations/README.md), take a backup, and verify a staging restore before applying any hosted PostgreSQL DDL.
+4. Confirm billing/spend limits and obtain separate approval before any paid TinyFish or Sarvam request. Do not enable recurring provider polling without a kill switch and budget ceiling.
+5. Run backend tests against SQLite and isolated PostgreSQL, TypeScript, production build, browser tests, npm/pip audits, and secret scans.
+6. Verify authenticated tenant isolation, HTTPS, SMTP, logging, backups, monitoring, and key rotation with disposable test accounts.
+7. Record approvals, migration IDs, health results, rollback outcome, and the verified public URLs.
 
-The existing Supabase project is configured locally. Its secret values are not recorded here. The user approved the first free public deployment; no public deployment has occurred yet.
+No command in this repository task applies this checklist or changes the existing public deployment. See [current deployment readiness](DEPLOYMENT_READINESS.md).

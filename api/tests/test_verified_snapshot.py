@@ -27,8 +27,33 @@ def test_verified_tinyfish_snapshot_is_persistent_and_idempotent():
         assert len(db.scalars(select(Alert)).all()) == 5
         run = db.scalar(select(IngestionRun))
         assert run.status == "succeeded"
+        assert run.source_kind == "historical_snapshot"
+        assert run.retrieval_metadata["imported_as_historical"] is True
+        assert run.retrieval_metadata["reporting_period"] == "AUG-2026"
         assert run.provider_run_id == "7d650bd4-71e6-49dc-b967-f95304ecb6aa"
         assert all(alert.source_url == "https://cdscoonline.gov.in/CDSCO/viewPublicNSQDrug" and alert.retrieved_at for alert in db.scalars(select(Alert)))
+
+
+def test_reimport_repairs_legacy_snapshot_provenance_without_duplicate_rows():
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    Base.metadata.create_all(engine)
+    with Session(engine) as db:
+        db.add(IngestionRun(
+            period="AUG-2026",
+            provider_run_id="7d650bd4-71e6-49dc-b967-f95304ecb6aa",
+            status="succeeded",
+            source_kind="unknown",
+            record_count=5,
+        ))
+        db.commit()
+
+        assert import_verified_snapshot(db, EVIDENCE / "cdsco-aug-2026-tinyfish.json", EVIDENCE / "cdsco-verification-report.json") == 0
+
+        run = db.scalar(select(IngestionRun))
+        assert run.source_kind == "historical_snapshot"
+        assert run.provider_run_url == "https://agent.tinyfish.ai/runs/7d650bd4-71e6-49dc-b967-f95304ecb6aa"
+        assert run.retrieval_metadata["imported_as_historical"] is True
+        assert db.query(Alert).count() == 0
 
 
 def test_snapshot_import_rejects_unverified_changes(tmp_path):

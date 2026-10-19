@@ -1,3 +1,6 @@
+from .models import MonitoringNotification
+from .models import Pharmacy, InventoryItem, Alert
+
 from datetime import date, datetime, timezone
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, UploadFile, File
@@ -7,6 +10,7 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select, desc, func
 from sqlalchemy.orm import Session
 from .auth import current_user
+from .rate_limit import sensitive_user
 from .config import settings
 from .db import get_db, initialize_schema
 from .models import Pharmacy, InventoryItem, Alert, AlertVersion, Match, Investigation, AuditEvent, IngestionRun, InventoryImport
@@ -14,6 +18,7 @@ from .ingestion import store_records
 from .csv_import import parse_csv
 from .inventory_service import import_rows
 from .matching import compare
+from .notification_service import sync_notifications
 from .ml import pharma_classify
 from .tinyfish import SOURCE_URL
 from .contextos import router as contextos_router
@@ -80,10 +85,18 @@ def rerun(db: Session, pharmacy: Pharmacy, *, commit: bool = True):
                 match.explanation = {**match.explanation, "note": "Identifiers changed since this investigation was recorded."}
             else:
                 db.delete(match)
+        # Ensure updated matches are visible to notification queries.
+    db.flush()
+
+    # Create notifications for new potential matches.
+    # Uses existing match records and avoids duplicate events.
+    sync_notifications(db, pharmacy)
+
     if commit:
         db.commit()
     else:
         db.flush()
+
 
 
 class PharmacyInput(BaseModel):
@@ -114,7 +127,7 @@ def current_pharmacy(user: str = Depends(current_user), db: Session = Depends(ge
 
 
 @app.put("/api/pharmacies/current")
-def save_pharmacy(data: PharmacyInput, user: str = Depends(current_user), db: Session = Depends(get_db)):
+def save_pharmacy(data: PharmacyInput, user: str = Depends(sensitive_user), db: Session = Depends(get_db)):
     pharmacy = db.scalar(select(Pharmacy).where(Pharmacy.owner_id == user)) or Pharmacy(owner_id=user)
     for key, value in data.model_dump().items():
         setattr(pharmacy, key, value)
@@ -124,7 +137,7 @@ def save_pharmacy(data: PharmacyInput, user: str = Depends(current_user), db: Se
 
 
 @app.post("/api/inventory/import")
-async def import_inventory(file: UploadFile = File(...), user: str = Depends(current_user), db: Session = Depends(get_db)):
+async def import_inventory(file: UploadFile = File(...), user: str = Depends(sensitive_user), db: Session = Depends(get_db)):
     pharmacy = pharmacy_for(db, user)
     if not file.filename or not file.filename.lower().endswith(".csv"):
         raise HTTPException(400, "Upload a CSV file")
@@ -139,7 +152,7 @@ async def import_inventory(file: UploadFile = File(...), user: str = Depends(cur
 
 
 @app.post("/api/inventory/connectors/mock/import")
-def import_reference_erp(user: str = Depends(current_user), db: Session = Depends(get_db)):
+def import_reference_erp(user: str = Depends(sensitive_user), db: Session = Depends(get_db)):
     """Explicitly synthetic local reference adapter; no commercial ERP connection."""
     pharmacy = pharmacy_for(db, user)
     sample = b"medicine_name,manufacturer,batch_number,strength,expiry_date,quantity\nSynthetic ERP Medicine,Example Manufacturer,SYN-DEMO-001,10mg,2028-01-01,3\n"
@@ -183,7 +196,7 @@ class InventoryEdit(BaseModel):
 
 
 @app.patch("/api/inventory/{item_id}")
-def edit_inventory(item_id: str, data: InventoryEdit, user: str = Depends(current_user), db: Session = Depends(get_db)):
+def edit_inventory(item_id: str, data: InventoryEdit, user: str = Depends(sensitive_user), db: Session = Depends(get_db)):
     pharmacy = pharmacy_for(db, user)
     item = db.scalar(select(InventoryItem).where(InventoryItem.id == item_id, InventoryItem.pharmacy_id == pharmacy.id))
     if not item:
@@ -253,7 +266,7 @@ def matches(user: str = Depends(current_user), db: Session = Depends(get_db)):
 
 
 @app.post("/api/matches/recheck")
-def recheck(user: str = Depends(current_user), db: Session = Depends(get_db)):
+def recheck(user: str = Depends(sensitive_user), db: Session = Depends(get_db)):
     pharmacy = pharmacy_for(db, user)
     rerun(db, pharmacy)
     return {"matches": db.scalar(select(func.count()).select_from(Match).where(Match.pharmacy_id == pharmacy.id))}
@@ -297,7 +310,7 @@ class InvestigationInput(BaseModel):
 
 
 @app.post("/api/investigations")
-def save_investigation(data: InvestigationInput, user: str = Depends(current_user), db: Session = Depends(get_db)):
+def save_investigation(data: InvestigationInput, user: str = Depends(sensitive_user), db: Session = Depends(get_db)):
     pharmacy = pharmacy_for(db, user)
     match = db.scalar(select(Match).where(Match.id == data.match_id, Match.pharmacy_id == pharmacy.id))
     if not match:
@@ -340,8 +353,55 @@ def investigation_events(record_id: str, user: str = Depends(current_user), db: 
 @app.get("/api/ingestion/status")
 def ingestion_status(user: str = Depends(current_user), db: Session = Depends(get_db)):
     latest = db.scalar(select(IngestionRun).where(IngestionRun.requesting_user_id.is_(None)).order_by(desc(IngestionRun.started_at)).limit(1))
-    success = db.scalar(select(IngestionRun).where(IngestionRun.requesting_user_id.is_(None), IngestionRun.status == "succeeded").order_by(desc(IngestionRun.finished_at)).limit(1))
-    return {"state": latest.status if latest else "never_synced", "last_checked": success.finished_at if success else None, "record_count": success.record_count if success else 0, "source_url": SOURCE_URL, "error": latest.error if latest else ""}
+    last_source_check = db.scalar(
+        select(IngestionRun)
+        .where(
+            IngestionRun.requesting_user_id.is_(None),
+            IngestionRun.source_kind == "operator_live",
+            IngestionRun.status == "succeeded",
+        )
+        .order_by(desc(IngestionRun.finished_at))
+        .limit(1)
+    )
+    latest_snapshot = db.scalar(
+        select(IngestionRun)
+        .where(
+            IngestionRun.requesting_user_id.is_(None),
+            IngestionRun.source_kind == "historical_snapshot",
+            IngestionRun.status == "succeeded",
+        )
+        .order_by(desc(IngestionRun.finished_at))
+        .limit(1)
+    )
+
+    if latest is None:
+        state = "never_synced"
+    elif latest.status == "failed":
+        state = "unavailable"
+    elif latest.source_kind == "historical_snapshot":
+        state = "historical_snapshot"
+    elif latest.source_kind == "operator_live" and latest.status == "succeeded":
+        state = "succeeded"
+    else:
+        state = "unknown_history"
+
+    return {
+        "state": state,
+        "last_checked": last_source_check.finished_at if last_source_check else None,
+        "record_count": (
+            last_source_check.record_count if last_source_check
+            else latest_snapshot.record_count if latest_snapshot else 0
+        ),
+        "source_url": SOURCE_URL,
+        "error": latest.error if latest and latest.status == "failed" else "",
+        "historical_snapshot_imported": latest_snapshot is not None,
+        "snapshot_imported_at": latest_snapshot.finished_at if latest_snapshot else None,
+        "snapshot_reporting_period": latest_snapshot.period if latest_snapshot else None,
+        "retrieval_metadata": (
+            last_source_check.retrieval_metadata if last_source_check
+            else latest_snapshot.retrieval_metadata if latest_snapshot else {}
+        ),
+    }
 
 
 @app.get("/api/dashboard")
@@ -350,6 +410,15 @@ def dashboard(user: str = Depends(current_user), db: Session = Depends(get_db)):
     items = db.scalars(select(InventoryItem).where(InventoryItem.pharmacy_id == pharmacy.id)).all()
     own_matches = db.scalars(select(Match).where(Match.pharmacy_id == pharmacy.id, Match.status != "no_identified_match")).all()
     open_count = db.scalar(select(func.count()).select_from(Investigation).where(Investigation.pharmacy_id == pharmacy.id, Investigation.status == "open"))
+    unread_notifications = db.scalar(
+        select(func.count())
+        .select_from(MonitoringNotification)
+        .where(
+            MonitoringNotification.pharmacy_id == pharmacy.id,
+            MonitoringNotification.is_read.is_(False),
+            MonitoringNotification.is_active.is_(True),
+        )
+    ) or 0
     questions = []
     if any(not x.batch_number for x in items):
         questions.append("Some inventory rows lack batch numbers. Please confirm them before deciding whether an alert applies.")
@@ -357,4 +426,63 @@ def dashboard(user: str = Depends(current_user), db: Session = Depends(get_db)):
         questions.append("Some inventory rows lack a manufacturer. Add it to improve verification.")
     if not items:
         questions.append("Import your batch-wise CSV to begin checking available official records.")
-    return {"pharmacy": pharmacy.name, "inventory_count": len(items), "potential_count": sum(m.status == "potential_match" for m in own_matches), "verification_count": sum(m.status == "needs_verification" for m in own_matches) + sum(i.quality_state == "needs_verification" for i in items), "open_investigations": open_count, "review_queue": [match_out(m, db) for m in own_matches[:3]], "recent_alerts": [alert_out(a) for a in db.scalars(select(Alert).order_by(desc(Alert.retrieved_at)).limit(5))], "clarifications": questions[:3], "source": ingestion_status(user, db)}
+    return {"pharmacy": pharmacy.name, "inventory_count": len(items), "potential_count": sum(m.status == "potential_match" for m in own_matches), "verification_count": sum(m.status == "needs_verification" for m in own_matches) + sum(i.quality_state == "needs_verification" for i in items), "open_investigations": open_count, "review_queue": [match_out(m, db) for m in own_matches[:3]], "recent_alerts": [alert_out(a) for a in db.scalars(select(Alert).order_by(desc(Alert.retrieved_at)).limit(5))], "clarifications": questions[:3], "source": ingestion_status(user, db),"unread_notifications": unread_notifications}
+@app.get("/api/notifications")
+def list_notifications(
+    user: str = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    pharmacy = pharmacy_for(db, user)
+
+    notifications = db.execute(
+        select(MonitoringNotification, InventoryItem, Alert)
+        .outerjoin(InventoryItem, InventoryItem.id == MonitoringNotification.inventory_id)
+        .outerjoin(Alert, Alert.fingerprint == MonitoringNotification.alert_id)
+        .where(
+            MonitoringNotification.pharmacy_id == pharmacy.id,
+            MonitoringNotification.is_active.is_(True),
+        )
+        .order_by(desc(MonitoringNotification.created_at))
+        .limit(100)
+    ).all()
+
+    return [
+        {
+            **fields(n, [
+                "id", "event_id", "inventory_id", "alert_id",
+                "status", "title", "message", "is_read", "created_at",
+            ]),
+            "is_active": n.is_active,
+            "medicine_name": item.medicine_name if item else "",
+            "batch_number": item.batch_number if item else "",
+            "quality_issue": alert.quality_issue if alert else "",
+            "reporting_period": alert.reporting_period if alert else "",
+            "source_url": alert.source_url if alert else "",
+        }
+        for n, item, alert in notifications
+    ]
+
+
+@app.patch("/api/notifications/{notification_id}/read")
+def mark_notification_read(
+    notification_id: str,
+    user: str = Depends(sensitive_user),
+    db: Session = Depends(get_db),
+):
+    pharmacy = pharmacy_for(db, user)
+
+    notification = db.scalar(
+        select(MonitoringNotification).where(
+            MonitoringNotification.id == notification_id,
+            MonitoringNotification.pharmacy_id == pharmacy.id,
+            MonitoringNotification.is_active.is_(True),
+        )
+    )
+
+    if notification is None:
+        raise HTTPException(404, "Notification not found")
+
+    notification.is_read = True
+    db.commit()
+
+    return {"id": notification.id, "is_read": True}
