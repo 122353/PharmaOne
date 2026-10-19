@@ -7,6 +7,13 @@ from dataclasses import dataclass
 import httpx
 
 
+SUPPORTED_TRANSLATION_LANGUAGES = {
+    "as-IN", "bn-IN", "brx-IN", "doi-IN", "en-IN", "gu-IN", "hi-IN", "kn-IN",
+    "ks-IN", "kok-IN", "mai-IN", "ml-IN", "mni-IN", "mr-IN", "ne-IN", "od-IN",
+    "pa-IN", "sa-IN", "sat-IN", "sd-IN", "ta-IN", "te-IN", "ur-IN",
+}
+
+
 class SarvamError(RuntimeError):
     def __init__(self, message: str, *, code: str = "provider_error"):
         super().__init__(message)
@@ -100,7 +107,7 @@ class SarvamClient:
             raise SarvamError("Sarvam returned an invalid chat response", code="invalid_response") from None
 
     def translate(self, value: str, target_language: str, source_language: str = "en-IN") -> str:
-        if target_language not in ("en-IN", "hi-IN") or source_language not in ("en-IN", "hi-IN"):
+        if target_language not in SUPPORTED_TRANSLATION_LANGUAGES or source_language not in SUPPORTED_TRANSLATION_LANGUAGES:
             raise ValueError("Unsupported language")
         payload = self._request("POST", "/translate", json={
             "input": value[:2000], "source_language_code": source_language,
