@@ -104,7 +104,7 @@ def main():
         initialize_schema()
         with SessionLocal() as db:
             print(run_scheduled(db, policy, settings().tinyfish_api_key,
-                                os.getenv("PHARMAONE_SCHEDULE_PERIOD", "")))
+                                os.getenv("PHARMAONE_SCHEDULE_PERIOD", "LATEST")))
     except Exception:
         parser.exit(1, "Scheduled ingestion failed; check configuration and sanitized ingestion run status.\n")
 
