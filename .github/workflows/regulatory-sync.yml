@@ -15,27 +15,52 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+
+    # Provider/database secrets are injected only into the steps that need them.
+    # If they are not configured yet, the workflow exits cleanly instead of
+    # creating a misleading red Actions history for the public repository.
+    env:
+      PHARMAONE_DATABASE_URL: ${{ secrets.PHARMAONE_DATABASE_URL }}
+      PHARMAONE_SUPABASE_URL: ${{ secrets.PHARMAONE_SUPABASE_URL }}
+      TINYFISH_API_KEY: ${{ secrets.TINYFISH_API_KEY }}
+
     steps:
+      - name: Check sync configuration
+        id: config
+        shell: bash
+        run: |
+          if [ -n "$PHARMAONE_DATABASE_URL" ] && [ -n "$PHARMAONE_SUPABASE_URL" ] && [ -n "$TINYFISH_API_KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "Production sync configuration is available."
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Production sync secrets are not configured; skipping provider call."
+          fi
+
       - name: Check out repository
+        if: steps.config.outputs.configured == 'true'
         uses: actions/checkout@v4
 
       - name: Set up Python
+        if: steps.config.outputs.configured == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install backend dependencies
+        if: steps.config.outputs.configured == 'true'
         run: pip install --disable-pip-version-check --no-cache-dir -r api/requirements.txt
 
       - name: Run one bounded CDSCO sync
+        if: steps.config.outputs.configured == 'true'
         working-directory: api
         env:
           PHARMAONE_ENV: production
-          DATABASE_URL: ${{ secrets.PHARMAONE_DATABASE_URL }}
-          SUPABASE_URL: ${{ secrets.PHARMAONE_SUPABASE_URL }}
+          DATABASE_URL: ${{ env.PHARMAONE_DATABASE_URL }}
+          SUPABASE_URL: ${{ env.PHARMAONE_SUPABASE_URL }}
           SUPABASE_JWT_AUDIENCE: authenticated
-          ALLOWED_ORIGINS: https://pharmaone-api.onrender.com
-          TINYFISH_API_KEY: ${{ secrets.TINYFISH_API_KEY }}
+          ALLOWED_ORIGINS: https://pharma-one-six.vercel.app
+          TINYFISH_API_KEY: ${{ env.TINYFISH_API_KEY }}
           PHARMAONE_SCHEDULE_ENABLED: "true"
           PHARMAONE_SCHEDULE_MAX_REQUESTS: "1"
           PHARMAONE_SCHEDULE_MAX_RECORDS: "25"
