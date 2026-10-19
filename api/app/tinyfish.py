@@ -28,9 +28,11 @@ def normalize_record(data: dict, period: str) -> dict:
     if not result["product_name"] or not result["batch_number"]:
         raise ValueError("Source record missing product or batch")
     record_period = str(data.get("reporting_period") or data.get("Reporting Month & Year") or data.get("reporting_month_year") or "").strip().upper()
-    if record_period != period:
+    if not re.fullmatch(r"(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-20\\d\\d", record_period):
+        raise ValueError("Source record reporting period is missing or invalid")
+    if period != "LATEST" and record_period != period:
         raise ValueError("Source record reporting period missing or different from selected period")
-    result["reporting_period"] = period
+    result["reporting_period"] = record_period
     result["source_url"] = SOURCE_URL
     result["classification"] = "nsq"
     result["raw_record"] = data
@@ -53,12 +55,19 @@ def extract_result(event: dict) -> list[dict] | None:
 
 
 def retrieve(key: str, period: str, limit: int = 10) -> tuple[list[dict], str]:
-    if not re.fullmatch(r"(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-20\d\d", period):
-        raise ValueError("Period must be MON-YYYY")
+    if period != "LATEST" and not re.fullmatch(r"(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-20\d\d", period):
+        raise ValueError("Period must be MON-YYYY or LATEST")
     if not 1 <= limit <= 25:
         raise ValueError("Limit must be 1 to 25")
-    goal = (f"On the public CDSCO NSQ Drugs table, select reporting month and year {period}, apply the filter, "
-            f"and extract only the first {limit} visible NSQ rows. Return JSON object with records array. "
+    if period == "LATEST":
+        selection = (
+            "find the most recent reporting month and year that has NSQ rows, using the page filters, "
+            "and keep all extracted rows from that single reporting period"
+        )
+    else:
+        selection = f"select reporting month and year {period} and apply the filter"
+    goal = (f"On the public CDSCO NSQ Drugs table, {selection}, "
+            f"then extract only the first {limit} visible NSQ rows. Return JSON object with records array. "
             "Each record must contain product_name, manufacturer, batch_number, quality_issue, reporting_source, reporting_period. "
             "Copy reporting_period from each row's Reporting Month & Year column. "
             "Copy values exactly as displayed. Do not infer missing fields. Do not extract spurious drugs. "
