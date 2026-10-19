@@ -28,7 +28,9 @@ def normalize_record(data: dict, period: str) -> dict:
     if not result["product_name"] or not result["batch_number"]:
         raise ValueError("Source record missing product or batch")
     record_period = str(data.get("reporting_period") or data.get("Reporting Month & Year") or data.get("reporting_month_year") or "").strip().upper()
-    if not re.fullmatch(r"(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-20\\d\\d", record_period):
+    # "LATEST" only controls which CDSCO table TinyFish opens. Every stored row must
+    # still carry an explicit source period such as AUG-2026 for provenance.
+    if not re.fullmatch(r"(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-20\d\d", record_period):
         raise ValueError("Source record reporting period is missing or invalid")
     if period != "LATEST" and record_period != period:
         raise ValueError("Source record reporting period missing or different from selected period")
