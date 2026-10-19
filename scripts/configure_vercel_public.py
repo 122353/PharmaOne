@@ -12,7 +12,7 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "web"
-KEYS = ("NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY")
+KEYS = ("NEXT_PUBLIC_API_URL", "NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY")
 
 
 def local_values() -> dict[str, str]:
@@ -29,8 +29,12 @@ def main() -> int:
     if not (WEB / ".vercel" / "project.json").exists():
         raise SystemExit("Link web/ to the Vercel Hobby project first")
     values = local_values()
-    if not values.get(KEYS[0], "").startswith("https://") or not values.get(KEYS[1]) or "your-project" in values[KEYS[0]]:
-        raise SystemExit("Public Supabase URL and publishable key must be configured locally")
+    if not values.get("NEXT_PUBLIC_API_URL", "").startswith("https://"):
+        raise SystemExit("NEXT_PUBLIC_API_URL must be an HTTPS production API URL")
+    if not values.get("NEXT_PUBLIC_SUPABASE_URL", "").startswith("https://") or "your-project" in values.get("NEXT_PUBLIC_SUPABASE_URL", ""):
+        raise SystemExit("Public Supabase URL must be configured locally")
+    if not values.get("NEXT_PUBLIC_SUPABASE_ANON_KEY"):
+        raise SystemExit("Public Supabase publishable key must be configured locally")
     npx = shutil.which("npx.cmd" if os.name == "nt" else "npx")
     if not npx:
         raise SystemExit("npx is unavailable; install Node.js before configuring Vercel")
