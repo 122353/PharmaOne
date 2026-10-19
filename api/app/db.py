@@ -7,12 +7,23 @@ class Base(DeclarativeBase):
     pass
 
 
-database_url = settings().database_url
+config = settings()
+database_url = config.database_url
 engine_options = {"pool_pre_ping": True}
 if database_url.startswith("postgresql"):
-    # Render Free has one small API worker; keep Supabase session-pooler use bounded.
-    engine_options.update(pool_size=2, max_overflow=0, pool_timeout=10, pool_recycle=1800,
-                          connect_args={"connect_timeout": 10, "sslmode": "require"})
+    # Keep the small production pool bounded, but do not force TLS against the
+    # local docker-compose Postgres instance. Remote databases still default to
+    # sslmode=require unless the URL or DB_SSLMODE explicitly says otherwise.
+    connect_args = {"connect_timeout": 10}
+    if config.resolved_db_sslmode:
+        connect_args["sslmode"] = config.resolved_db_sslmode
+    engine_options.update(
+        pool_size=2,
+        max_overflow=0,
+        pool_timeout=10,
+        pool_recycle=1800,
+        connect_args=connect_args,
+    )
 engine = create_engine(database_url, **engine_options)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
