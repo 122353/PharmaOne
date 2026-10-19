@@ -164,6 +164,7 @@ Important backend variables:
 ```text
 PHARMAONE_ENV
 DATABASE_URL
+DB_SSLMODE
 SUPABASE_URL
 SUPABASE_JWT_AUDIENCE
 ALLOWED_ORIGINS
@@ -179,7 +180,20 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 ```
 
-### 3. Start backend
+### 3. Initialize PostgreSQL when needed
+
+For a fresh PostgreSQL database, run the checked-in migrations once before starting the API:
+
+```bash
+cd api
+python -m app.migrate
+```
+
+The migration runner applies `000_base_schema.sql`, `001_monitoring_notifications.sql`, and `002_ingestion_run_provenance.sql` in order and records completed files in `schema_migrations`.
+
+For local Docker Compose, this migration step is run automatically before the API process starts. `DB_SSLMODE=auto` disables SSL for localhost/`db` and defaults remote PostgreSQL connections to `require`. A provider-supplied `sslmode` query parameter takes precedence.
+
+### 4. Start backend
 
 ```bash
 cd api
@@ -189,7 +203,7 @@ python -m uvicorn app.main:app --reload --port 8000
 
 API docs: http://localhost:8000/docs
 
-### 4. Start frontend
+### 5. Start frontend
 
 ```bash
 cd web
@@ -216,6 +230,9 @@ api/
     notification_service.py
   tests/
   migrations/
+    000_base_schema.sql
+    001_monitoring_notifications.sql
+    002_ingestion_run_provenance.sql
 
 web/
   app/
@@ -265,6 +282,17 @@ Implemented:
 - QR/barcode scanning
 - browser OCR fallback
 - bounded scheduled-sync workflow
+
+Repository portability fixes now included:
+
+- reproducible base PostgreSQL schema migration
+- explicit idempotent migration runner
+- standard `postgres://` / `postgresql://` URL normalization
+- local-vs-cloud PostgreSQL SSL handling
+- Docker image copies model artifacts and migrations
+- Docker Compose initializes a clean PostgreSQL volume before API startup
+- Vercel helper configures `NEXT_PUBLIC_API_URL` with Supabase public variables
+- API Docker build context excludes local secrets and virtual environments
 
 Still requiring production acceptance/configuration rather than new core development:
 
