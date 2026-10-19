@@ -1,12 +1,14 @@
-# PostgreSQL notifications and provenance migrations
+# PostgreSQL schema migrations
 
-`001_monitoring_notifications.sql` adds pharmacy notifications, a primary key, three foreign keys, unique `(pharmacy_id, event_id)`, and indexes for pharmacy/active/unread queries. It adds `is_active` to a compatible older notification table, enables RLS, and revokes table privileges from `PUBLIC` and existing `anon`/`authenticated` roles. `002_ingestion_run_provenance.sql` adds `provider_run_url`, `source_kind`, and JSON `retrieval_metadata` with defaults for retained runs.
+`000_base_schema.sql` creates the core PharmaOne tables for a fresh PostgreSQL database. `001_monitoring_notifications.sql` adds pharmacy notifications, a primary key, three foreign keys, unique `(pharmacy_id, event_id)`, and indexes for pharmacy/active/unread queries. `002_ingestion_run_provenance.sql` adds `provider_run_url`, `source_kind`, and JSON `retrieval_metadata` with defaults for retained runs.
 
-Both files use individual transactions. Repeat application is supported for compatible schemas. No existing rows are deleted or rewritten. Adding columns with defaults changes the shape of returned rows and gives old rows the documented defaults. Locks during DDL can block concurrent writes; schedule a reviewed change window.
+Use `python -m app.migrate` from `api/` to apply checked-in migrations in filename order. The runner records completed files in `public.schema_migrations`; each SQL file owns its own transaction and is recorded only after successful execution.
 
-## Execution status (2026-10-19)
+The files are additive for compatible existing schemas. No existing rows are intentionally deleted or rewritten. Locks during DDL can block concurrent writes; use a reviewed change window for a production database.
 
-**BLOCKED: actual PostgreSQL execution has not run.** PostgreSQL binaries are absent from PATH, `C:\Program Files\PostgreSQL` is absent, and Docker's `dockerDesktopLinuxEngine` pipe is unavailable. SQL review, Python compilation, and target guard tests ran locally. SQLite tests do not establish PostgreSQL readiness. The added PostgreSQL catalog checks and fixture scenarios still require execution on a disposable local runtime before deployment approval.
+## Validation status (2026-10-19)
+
+The repository now contains a reproducible fresh-database path (`000` + `app.migrate`) and Docker Compose invokes it before the API starts. The existing migration validator still keeps destructive/remote targets blocked and requires an explicit disposable-local PostgreSQL opt-in for catalog-level checks. A successful SQLite run is not treated as proof of PostgreSQL compatibility.
 
 ## Existing schema compatibility
 
@@ -40,7 +42,7 @@ It creates seven randomly named `pharmaone_migration_test_*` databases from `tem
 Before an approved deployment:
 
 1. Confirm the intended PostgreSQL instance, take the normal managed backup, and run the disposable local validation above successfully. Then review differences in the intended deployment schema without mutating it.
-2. Confirm `public.pharmacies(id)`, `public.inventory_items(id)`, `public.regulatory_alerts(fingerprint)`, and `public.ingestion_runs` already exist. Referenced columns must be primary/unique keys. Review retained row counts and existing notification duplicates/orphans. Neither file creates the baseline application schema.
+2. For a fresh database, apply `python -m app.migrate` so `000_base_schema.sql` creates the baseline before 001/002. For an existing database, confirm the baseline tables and referenced keys are compatible before applying additive migrations. Review retained row counts and existing notification duplicates/orphans.
 3. Use an approved migration role with schema USAGE/CREATE, ownership of an existing notification table and `ingestion_runs` (or an authorized owning role membership), and REFERENCES privileges on parent keys. ALTER TABLE, RLS, and REVOKE require ownership or equivalent administrator capability. Do not run DDL from API startup.
 4. Apply 001 then 002. Inspect `pg_constraint`/`pg_index` for validated keys and ready/valid expected indexes; inspect `pg_class.relrowsecurity`, `pg_policies`, `relacl`, and `has_table_privilege` for all client DML privileges. Direct revokes do not remove privileges inherited through other role memberships; those memberships require separate review.
 5. Check the actual API database role separately. RLS is enabled with no new policies. Owners bypass ordinary RLS unless FORCE ROW LEVEL SECURITY is set; a distinct role needs explicit table DML grants **and** an approved RLS strategy (appropriate policies or a deliberately authorized BYPASSRLS server role). Grants alone do not bypass RLS. These migrations grant no new API role privileges and do not prove that a deployment role can write. Never grant browser `anon`/`authenticated` direct table access to make API writes succeed.
