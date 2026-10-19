@@ -21,6 +21,10 @@ services:
       - ./evidence:/evidence:ro
     environment:
       DATABASE_URL: "postgresql+psycopg://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the ignored local .env file}@db:5432/pharmaone"
+      DB_SSLMODE: "disable"
+    # A fresh local PostgreSQL volume needs the checked-in schema before FastAPI
+    # starts. The migration runner is idempotent and records applied files.
+    command: ["sh", "-c", "python -m app.migrate && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
     ports:
       - "127.0.0.1:8000:8000"
     healthcheck:
