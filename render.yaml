@@ -15,9 +15,15 @@ services:
         value: production
       - key: DATABASE_URL
         sync: false
+      - key: DB_SSLMODE
+        value: auto
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_JWT_AUDIENCE
         value: authenticated
       - key: ALLOWED_ORIGINS
+        sync: false
+      - key: TINYFISH_API_KEY
+        sync: false
+      - key: SARVAM_API_KEY
         sync: false
