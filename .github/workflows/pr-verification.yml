@@ -1,0 +1,64 @@
+name: PharmaOne pull-request verification
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pharmaone-pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install backend dependencies
+        working-directory: api
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements-dev.txt
+      - name: Run backend tests
+        working-directory: api
+        env:
+          PHARMAONE_ENV: local
+        run: python3 -m pytest tests -q
+
+  web-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://synthetic-project.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: synthetic-anon-key-for-mocked-tests
+      NEXT_PUBLIC_API_URL: https://api.synthetic.invalid
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+      - name: Type-check
+        working-directory: web
+        run: npx tsc --noEmit
+      - name: Production build
+        working-directory: web
+        run: npm run build
+      - name: Install browser
+        working-directory: web
+        run: npx playwright install --with-deps chromium
+      - name: Run browser tests
+        working-directory: web
+        run: |
+          printf '%s\n' \
+            'NEXT_PUBLIC_SUPABASE_URL=https://synthetic-project.supabase.co' \
+            'NEXT_PUBLIC_SUPABASE_ANON_KEY=synthetic-anon-key-for-mocked-tests' \
+            'NEXT_PUBLIC_API_URL=https://api.synthetic.invalid' > .env.local
+          npm run test -- --workers=1
