@@ -16,6 +16,15 @@ from .models import Alert, AuditEvent, InventoryItem, Match, Pharmacy
 from .sarvam import SarvamClient, SarvamError
 
 router = APIRouter()
+TRANSLATION_CODES = {
+    "en": "en-IN", "hi": "hi-IN", "bn": "bn-IN", "ta": "ta-IN", "te": "te-IN",
+    "mr": "mr-IN", "gu": "gu-IN", "kn": "kn-IN", "ml": "ml-IN", "pa": "pa-IN",
+    "od": "od-IN", "as": "as-IN", "ur": "ur-IN", "ne": "ne-IN", "sa": "sa-IN",
+    "kok": "kok-IN", "ks": "ks-IN", "mai": "mai-IN", "mni": "mni-IN",
+    "brx": "brx-IN", "doi": "doi-IN", "sat": "sat-IN", "sd": "sd-IN",
+}
+
+
 logger = logging.getLogger("pharmaone.contextos")
 
 
@@ -89,7 +98,7 @@ class Question(BaseModel):
 
 
 class TranslationRequest(BaseModel):
-    language: str = Field(pattern="^(en|hi)$")
+    language: str = Field(pattern="^(en|hi|bn|ta|te|mr|gu|kn|ml|pa|od|as|ur|ne|sa|kok|ks|mai|mni|brx|doi|sat|sd)$")
 
 
 @router.post("/api/alerts/{alert_id}/translate")
@@ -108,20 +117,21 @@ def translate_finding(alert_id: str, data: TranslationRequest, user: str = Depen
                 "batch_number": alert.batch_number, "source_url": alert.source_url, "language": "en", "mode": "original"}
     if provider is None:
         raise HTTPException(503, "Sarvam translation is not configured")
+    target_code = TRANSLATION_CODES[data.language]
     used = db.scalar(select(func.count()).select_from(AuditEvent).where(
         AuditEvent.pharmacy_id == pharmacy.id, AuditEvent.action == "alert_translation",
         AuditEvent.created_at >= datetime.now(timezone.utc) - timedelta(days=1))) or 0
     if used >= 20:
         raise HTTPException(429, "Daily translation limit reached")
     db.add(AuditEvent(pharmacy_id=pharmacy.id, actor_id=user, action="alert_translation",
-                      entity_id=alert.fingerprint[:36], detail={"language": "hi"}))
+                      entity_id=alert.fingerprint[:36], detail={"language": data.language}))
     db.commit()
     try:
-        translated = provider.translate(alert.quality_issue[:2000], "hi-IN")
+        translated = provider.translate(alert.quality_issue[:2000], target_code)
     except SarvamError:
         raise HTTPException(502, "Translation provider unavailable") from None
     return {"original": alert.quality_issue, "translated": translated,
-            "batch_number": alert.batch_number, "source_url": alert.source_url, "language": "hi", "mode": "sarvam_translation"}
+            "batch_number": alert.batch_number, "source_url": alert.source_url, "language": data.language, "mode": "sarvam_translation"}
 
 
 @router.post("/api/contextos/ask")
