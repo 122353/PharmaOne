@@ -1,0 +1,44 @@
+name: PharmaOne Regulatory Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 1 * * *"
+
+concurrency:
+  group: pharmaone-regulatory-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        run: pip install --disable-pip-version-check --no-cache-dir -r api/requirements.txt
+
+      - name: Run one bounded CDSCO sync
+        working-directory: api
+        env:
+          PHARMAONE_ENV: production
+          DATABASE_URL: ${{ secrets.PHARMAONE_DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.PHARMAONE_SUPABASE_URL }}
+          SUPABASE_JWT_AUDIENCE: authenticated
+          ALLOWED_ORIGINS: https://pharmaone-api.onrender.com
+          TINYFISH_API_KEY: ${{ secrets.TINYFISH_API_KEY }}
+          PHARMAONE_SCHEDULE_ENABLED: "true"
+          PHARMAONE_SCHEDULE_MAX_REQUESTS: "1"
+          PHARMAONE_SCHEDULE_MAX_RECORDS: "25"
+          PHARMAONE_SCHEDULE_INTERVAL_HOURS: "24"
+          PHARMAONE_SCHEDULE_PERIOD: LATEST
+        run: python -m app.scheduled_ingest
