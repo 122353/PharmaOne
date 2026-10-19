@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -37,19 +38,50 @@ def import_verified_snapshot(db: Session, snapshot_path: Path, report_path: Path
     ):
         raise ValueError("Snapshot does not match successful source verification")
     provider_id = snapshot["provider_run_id"]
-    if db.scalar(select(IngestionRun).where(IngestionRun.provider_run_id == provider_id)):
+    provider_run_url = (
+        f"https://agent.tinyfish.ai/runs/{provider_id}"
+        if re.fullmatch(r"[0-9a-fA-F-]{36}", str(provider_id))
+        else ""
+    )
+    retrieval_metadata = {
+        "reporting_period": snapshot["reporting_period"],
+        "source_url": SOURCE_URL,
+        "verified_at": report.get("verified_at"),
+        "snapshot_sha256": report["snapshot_sha256"],
+        "record_count": len(records),
+        "imported_as_historical": True,
+    }
+    existing_run = db.scalar(select(IngestionRun).where(IngestionRun.provider_run_id == provider_id))
+    if existing_run:
+        # Older local snapshot imports predate source_kind provenance. Repair
+        # only the exact verified historical run; never relabel a live run.
+        if (
+            existing_run.source_kind == "unknown"
+            and existing_run.status == "succeeded"
+            and existing_run.period == snapshot["reporting_period"]
+        ):
+            existing_run.source_kind = "historical_snapshot"
+            existing_run.provider_run_url = provider_run_url
+            existing_run.retrieval_metadata = retrieval_metadata
+            db.commit()
         return 0
     normalized = [normalize_record(record, snapshot["reporting_period"]) for record in records]
-    run = IngestionRun(period=snapshot["reporting_period"], provider_run_id=provider_id)
+    run = IngestionRun(
+        period=snapshot["reporting_period"],
+        provider_run_id=provider_id,
+        provider_run_url=provider_run_url,
+        source_kind="historical_snapshot",
+        retrieval_metadata=retrieval_metadata,
+    )
     db.add(run)
-    db.commit()
-    store_records(db, normalized, run.id)
+    db.flush()
+    store_records(db, normalized, run.id, commit=False)
     run.status = "succeeded"
     run.record_count = len(normalized)
     run.finished_at = datetime.now(timezone.utc)
-    db.commit()
     for pharmacy in db.scalars(select(Pharmacy)):
-        rerun(db, pharmacy)
+        rerun(db, pharmacy, commit=False)
+    db.commit()
     return len(normalized)
 
 

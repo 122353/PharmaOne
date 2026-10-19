@@ -20,10 +20,12 @@ def current_user(authorization: str | None = Header(default=None)) -> str:
         raise HTTPException(503, "Supabase Auth is not configured")
     token = authorization[7:]
     try:
+        if len(token) > 16_384:
+            raise ValueError("Token too large")
         key = client.get_signing_key_from_jwt(token).key
-        claims = jwt.decode(token, key, algorithms=["RS256", "ES256"], audience=settings().supabase_jwt_audience, issuer=f"{settings().supabase_url.rstrip('/')}/auth/v1")
+        claims = jwt.decode(token, key, algorithms=["RS256", "ES256"], audience=settings().supabase_jwt_audience, issuer=f"{settings().supabase_url.rstrip('/')}/auth/v1", options={"require": ["exp", "sub", "aud", "iss"]})
         subject = claims.get("sub")
-        if not subject or claims.get("role") != "authenticated":
+        if not isinstance(subject, str) or not subject or len(subject) > 64 or claims.get("role") != "authenticated":
             raise ValueError("Invalid role")
         return subject
     except Exception as exc:

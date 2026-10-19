@@ -165,13 +165,33 @@ def test_failed_sync_retains_last_successful_check_time(client):
     http, sessions, _ = client
     with sessions() as db:
         earlier = datetime.now(timezone.utc)-timedelta(days=1)
-        db.add(IngestionRun(period='JUL-2026',status='succeeded',record_count=5,started_at=earlier,finished_at=earlier))
-        db.add(IngestionRun(period='AUG-2026',status='failed',error='Source unavailable',record_count=0,started_at=datetime.now(timezone.utc),finished_at=datetime.now(timezone.utc)))
+        db.add(IngestionRun(period='JUL-2026',source_kind='operator_live',status='succeeded',record_count=5,started_at=earlier,finished_at=earlier))
+        db.add(IngestionRun(period='AUG-2026',source_kind='operator_live',status='failed',error='Source unavailable',record_count=0,started_at=datetime.now(timezone.utc),finished_at=datetime.now(timezone.utc)))
         db.commit()
     result = http.get('/api/ingestion/status').json()
-    assert result['state'] == 'failed'
+    assert result['state'] == 'unavailable'
     assert result['record_count'] == 5
     assert result['last_checked'] is not None
+
+
+def test_historical_snapshot_is_not_reported_as_a_live_source_check(client):
+    from datetime import datetime, timezone
+    from app.models import IngestionRun
+    http, sessions, _ = client
+    imported_at = datetime.now(timezone.utc)
+    with sessions() as db:
+        db.add(IngestionRun(
+            period='AUG-2026', source_kind='historical_snapshot', status='succeeded',
+            record_count=5, started_at=imported_at, finished_at=imported_at,
+            provider_run_id='verified-snapshot-run',
+            retrieval_metadata={'imported_as_historical': True},
+        ))
+        db.commit()
+    result = http.get('/api/ingestion/status').json()
+    assert result['state'] == 'historical_snapshot'
+    assert result['last_checked'] is None
+    assert result['historical_snapshot_imported'] is True
+    assert result['snapshot_reporting_period'] == 'AUG-2026'
 
 
 def test_inventory_edit_rejects_duplicate_identity(client):

@@ -1,3 +1,5 @@
+> **Historical report.** The dated notes below describe earlier test and provider environments, including PostgreSQL and ten-record claims. They are not the 19 October local SQLite baseline. Use the [current verification report](FINAL_VERIFICATION_REPORT.md) for present counts, tests, and production status. The existing public deployment was not changed in this task.
+
 # PharmaOne implementation report — 18 October 2026
 
 ## Final verification addendum

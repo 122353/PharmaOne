@@ -9,6 +9,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from .auth import current_user
+from .rate_limit import sensitive_user
 from .config import settings
 from .db import get_db
 from .models import Alert, AuditEvent, InventoryItem, Match, Pharmacy
@@ -92,7 +93,7 @@ class TranslationRequest(BaseModel):
 
 
 @router.post("/api/alerts/{alert_id}/translate")
-def translate_finding(alert_id: str, data: TranslationRequest, user: str = Depends(current_user),
+def translate_finding(alert_id: str, data: TranslationRequest, user: str = Depends(sensitive_user),
                       db: Session = Depends(get_db), provider=Depends(sarvam_service)):
     pharmacy = db.scalar(select(Pharmacy).where(Pharmacy.owner_id == user))
     if not pharmacy:
@@ -124,7 +125,7 @@ def translate_finding(alert_id: str, data: TranslationRequest, user: str = Depen
 
 
 @router.post("/api/contextos/ask")
-def ask(data: Question, user: str = Depends(current_user), db: Session = Depends(get_db), provider=Depends(sarvam_service)):
+def ask(data: Question, user: str = Depends(sensitive_user), db: Session = Depends(get_db), provider=Depends(sarvam_service)):
     pharmacy = db.scalar(select(Pharmacy).where(Pharmacy.owner_id == user))
     if not pharmacy:
         raise HTTPException(404, "Create your pharmacy profile first")

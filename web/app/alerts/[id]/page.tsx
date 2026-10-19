@@ -8,6 +8,16 @@ import TranslatedFinding from '@/components/TranslatedFinding';
 import EvidenceAttachments from '@/components/EvidenceAttachments';
 import {api, Alert, Match} from '@/lib/api';
 
+function strengthLabel(values: {value_mg: string; basis: string}[]) {
+  if (!values.length) return 'Not supplied';
+  return values.map(value => {
+    const mass = `${value.value_mg} mg`;
+    if (value.basis === 'per_ml') return `${mass}/mL`;
+    if (value.basis === 'dose') return mass;
+    return `${mass}/${value.basis.replace('per_', '')}`;
+  }).join(' + ');
+}
+
 type Investigation = {
   id: string; match_id: string; status: string; physical_status: string; simulated_hold: boolean;
   note: string; updated_at: string; record_reviewed: boolean; physical_verified: boolean;
@@ -30,12 +40,16 @@ export default function Page() {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const inFlight = useRef(false);
-  const selected = matches.find(match => match.id === search.get('match')) || matches.find(match => match.alert.fingerprint === id);
+  const requestedMatch = matches.find(match => match.id === search.get('match'));
+  const selected = requestedMatch?.alert.fingerprint === id
+    ? requestedMatch
+    : matches.find(match => match.alert.fingerprint === id);
   const investigation = investigations.find(item => item.match_id === selected?.id);
 
   useEffect(() => {
-    api<Alert>('/api/alerts/' + id).then(setAlert).catch(error => setMessage(String(error)));
-    api<Version[]>('/api/alerts/' + id + '/versions').then(setVersions).catch(() => {});
+    const alertPath = '/api/alerts/' + encodeURIComponent(id);
+    api<Alert>(alertPath).then(setAlert).catch(error => setMessage(String(error)));
+    api<Version[]>(alertPath + '/versions').then(setVersions).catch(() => {});
     api<Match[]>('/api/matches').then(setMatches).catch(() => {});
     api<Investigation[]>('/api/investigations').then(setInvestigations).catch(() => {});
   }, [id]);
@@ -83,9 +97,27 @@ export default function Page() {
       <TranslatedFinding alert={alert}/><p className="tiny muted">Source: CDSCO public NSQ database. The source link opens the database; filter to {alert.reporting_period} and locate this batch. No direct record URL was supplied by the source.</p>
     </div><div className="card"><h2>Your inventory comparison</h2>
       {selected ? <><p><b>{selected.inventory.medicine_name}</b><br/><span className="badge">{selected.status.replaceAll('_', ' ')}</span></p>
-        <div className="comparison">{(['product','batch','manufacturer'] as const).map(key => {const value=selected.explanation[key];return <div key={key}><small>{key} · {value.exact || value.aligned ? 'aligned' : 'verify'}</small>Your stock: {value.inventory || 'missing'}<br/>Source: {value.source || 'missing'}</div>})}</div>
-        {selected.explanation.pharma_match && <p className="tiny muted">PharmaMatch v{selected.explanation.pharma_match.version} advisory product similarity: {Math.round(selected.explanation.pharma_match.product_similarity*100)}%. The batch and manufacturer checks above determine review status.</p>}
-        <div className="notice">{selected.status === 'potential_match' ? 'Product, batch and manufacturer align under conservative normalization. Confirm against the source and physical stock.' : 'An identifier is missing or conflicts. Verify before deciding whether this record applies.'}</div>
+        <div className="comparison">
+          <div><small>Product identity · {selected.explanation.product.aligned ? 'aligned' : 'verify'}</small>Your stock: {selected.explanation.product.inventory || 'missing'}<br/>Source: {selected.explanation.product.source || 'missing'}</div>
+          <div><small>Batch · {selected.explanation.batch.exact ? 'exact' : 'verify'}</small>Your stock: {selected.explanation.batch.inventory || 'missing'}<br/>Source: {selected.explanation.batch.source || 'missing'}</div>
+          <div><small>Manufacturer · {selected.explanation.manufacturer.aligned ? 'aligned' : 'verify'}</small>Your stock: {selected.explanation.manufacturer.inventory || 'missing'}<br/>Source: {selected.explanation.manufacturer.source || 'missing'}</div>
+          {selected.explanation.strength && <div><small>Strength · {selected.explanation.strength.aligned === true ? 'aligned' : 'verify'}</small>
+            Your stock: {selected.explanation.strength.inventory_conflict
+              ? `Name: ${strengthLabel(selected.explanation.strength.inventory_name)}; field: ${strengthLabel(selected.explanation.strength.inventory_field)}`
+              : strengthLabel(selected.explanation.strength.inventory)}<br/>
+            Source: {strengthLabel(selected.explanation.strength.source)}
+          </div>}
+          <div><small>Formulation / release · {selected.explanation.product.form_aligned === false || selected.explanation.product.release_aligned === false ? 'conflict' : selected.explanation.product.form_aligned === null || selected.explanation.product.release_aligned === null ? 'verify' : 'aligned'}</small>
+            Your stock: {[...(selected.explanation.product.inventory_form || []), ...(selected.explanation.product.inventory_release || [])].join(', ') || 'not stated'}<br/>
+            Source: {[...(selected.explanation.product.source_form || []), ...(selected.explanation.product.source_release || [])].join(', ') || 'not stated'}
+          </div>
+        </div>
+        {selected.explanation.strength?.inventory_conflict && <div className="notice error">The medicine name and separate inventory strength disagree. Verify the package and inventory record with a pharmacist.</div>}
+        {selected.explanation.strength?.aligned === false && <div className="notice error">Inventory and regulatory strengths differ. This requires pharmacist verification.</div>}
+        {!selected.explanation.manufacturer.aligned && <div className="notice">Manufacturer identity is missing or differs. Confirm the manufacturer from the physical package.</div>}
+        {selected.explanation.pharma_match?.product_similarity !== undefined && <p className="tiny muted">PharmaMatch v{selected.explanation.pharma_match.version} advisory product similarity: {Math.round(selected.explanation.pharma_match.product_similarity*100)}%. This score does not determine match status.</p>}
+        {selected.explanation.semantic_match?.candidate_retrieved && <p className="tiny muted">MiniLM surfaced this naming candidate for pharmacist verification. Semantic similarity cannot confirm a match.</p>}
+        <div className="notice">{selected.status === 'potential_match' ? 'Product, batch, manufacturer and available strength/formulation evidence align under conservative rules. Pharmacist review of the official source and physical stock is still required.' : 'One or more identifiers are missing or conflict. Verify the official evidence and physical package before deciding whether this record applies.'}</div>
         <label className="field">Pharmacist note<textarea value={note} onChange={event => setNote(event.target.value)} placeholder="Record what you checked"/></label>
         <div className="verification-checklist"><label><input type="checkbox" checked={recordReviewed} onChange={event => setRecordReviewed(event.target.checked)}/> Official record reviewed</label><label><input type="checkbox" checked={physicalVerified} onChange={event => setPhysicalVerified(event.target.checked)}/> Physical package and batch verified</label></div>
         <div style={{display: 'flex', gap: 8, flexWrap: 'wrap'}}>

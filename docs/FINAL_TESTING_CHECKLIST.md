@@ -1,15 +1,40 @@
-# Final manual acceptance checklist
+# Local demo and manual acceptance checklist
 
-Use test accounts and synthetic pharmacy inventory. Keep all provider keys in `api/.env`; do not paste them into chat or browser settings. Start the two local servers using [README](../README.md).
+Use the [current README](../README.md) and [four-minute demo](HACKATHON_DEMO.md). Keep the demo offline, set `PHARMAONE_ENV=local` and `DATABASE_URL=sqlite:///./pharmaone_development.db`, and confirm the resolved engine and path before any database command.
 
-1. **Auth:** Complete the [Supabase SMTP setup](SUPABASE_EMAIL_SETUP.md) and test one delivered confirmation and reset email. Sign up two confirmed Supabase users, log in and out, reload both sessions, and check the new password-reset page. Confirm user B cannot see A's pharmacy, inventory, investigations, supplier routes, attachments or import history. Try A's direct API object IDs with B's bearer token; expect `404` or `403` without data.
-2. **Source:** Confirm the ten records from the successful central `AUG-2026` sync appear on the dashboard. Their field-level comparison to the official NSQ table is recorded in [read-only evidence](../evidence/cdsco-live-compare-2026-10-18.json). Check source URLs, run state and change history; no repeat TinyFish sync is needed.
-3. **Inventory:** Upload synthetic CSV containing an exact CDSCO batch, one wrong batch, one missing manufacturer, one missing batch and a duplicate. Confirm only a conservative exact-batch candidate is prominent and incomplete rows request review.
-4. **Scan:** Scan a printed test QR and a barcode on a real camera device. Confirm decoded raw text is shown; a barcode-only value does not fill a batch. After separate Sarvam OCR approval, upload one PNG/JPEG sample, verify original OCR text, correct a deliberately wrong batch, then confirm the match. Invalid and oversized images can be tested without a provider call.
-5. **ContextOS:** A previously approved live text call already passed the handler for `VRNT-933`; verify that answer on the signed-in page only with a separate live-call approval or inspect the persisted success audit without calling the provider. Check answer mode, fallback reason if any, official source link and exact batch. Test Hindi translation and OCR only with their own approvals. A provider request appearing in Sarvam's dashboard does not prove the generated answer passed application checks.
-6. **Investigation:** Open the candidate, record review and physical verification separately, add notes, set `physical verification pending`, upload a small test PNG and PDF, then simulate hold. Repeat the same decision once; no duplicate audit event should appear. Reload, log out/in and confirm the review status remains distinct from the simulated hold, and the note, attachment and audit events persist. Confirm user B cannot download the file and no physical inventory restriction occurred.
-7. **Related views:** Open regulatory change history, import history and supplier exposure. Verify supplier relations are labeled synthetic and user B cannot see them.
-8. **Mobile and Hindi:** Repeat scan, evidence review, ContextOS, and investigation on a narrow phone viewport; confirm menu, forms and table scrolling are usable. Switch to Hindi and refresh. Navigation and key scan/ContextOS text should persist; list any remaining English screens for completion. Do not translate medicine names or batch identifiers.
-9. **Operations:** Verify Docker boot only after the Linux engine is available. Re-run PostgreSQL security tests after any database role or migration change.
+## Current saved demo baseline
 
-Automated evidence: `python -m pytest -q` from `api`, then separately `$env:PHARMAONE_TEST_POSTGRES='1'; python -m pytest tests/test_postgres_security.py tests/test_postgres_workflow.py -q`; `npx tsc --noEmit`, `npm run build`, `npm test` from `web`. Run the PostgreSQL tests sequentially to avoid schema-startup lock contention. The Playwright journey is synthetic, and does not replace these live acceptance steps.
+- Source panel says **Historical snapshot imported** for **AUG-2026** and reports no live source check.
+- Local SQLite contains five regulatory records, three synthetic inventory rows, two potential matches, and two notifications. Both notifications are already acknowledged, so unread count is zero.
+- Review links open the alert fingerprint and preserve the official source period. No match proves stock is safe, and an NSQ entry is not automatically a recall.
+- The saved baseline has no strength-conflict match. Demonstrate the 300mg-versus-600mg safety case with the isolated regression/browser fixture below; it does not mutate the saved database.
+
+## Local regression commands
+
+From `api/`:
+
+```powershell
+$env:PHARMAONE_ENV = 'local'
+$env:DATABASE_URL = 'sqlite:///./pharmaone_development.db'
+.\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe -m pytest tests\test_verified_snapshot.py::test_verified_alert_to_synthetic_pharmacy_hold_persists_and_isolated -q
+```
+
+From `web/`:
+
+```powershell
+npx.cmd tsc --noEmit
+npm.cmd run build
+npm.cmd test
+```
+
+The full local suite currently passes with 137 backend passes and 12 browser passes. Three PostgreSQL-only backend cases are skipped because no isolated PostgreSQL test server is configured.
+
+## Manual acceptance not performed here
+
+- Real Supabase signup/reset email delivery and two-account browser isolation.
+- Live TinyFish, Sarvam chat/OCR/translation, or any paid provider call.
+- Physical phone camera or printed medicine label.
+- PostgreSQL migration execution, Docker runtime, production deployment parity, backups/restore, or hosted monitoring.
+
+Any production Supabase change, hosted PostgreSQL migration, paid provider call, or deployment requires explicit user approval. Do not use production data to complete this checklist.

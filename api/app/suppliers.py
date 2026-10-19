@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .auth import current_user
+from .rate_limit import sensitive_user
 from .db import get_db
 from .models import InventoryItem, Match, Pharmacy, SupplierLink
 
@@ -24,7 +25,7 @@ class LinkInput(BaseModel):
 
 
 @router.post('/api/suppliers/links')
-def save_link(data:LinkInput,user:str=Depends(current_user),db:Session=Depends(get_db)):
+def save_link(data:LinkInput,user:str=Depends(sensitive_user),db:Session=Depends(get_db)):
     pharmacy=pharmacy_for(db,user)
     item=db.scalar(select(InventoryItem).where(InventoryItem.id==data.inventory_id,InventoryItem.pharmacy_id==pharmacy.id))
     if not item:raise HTTPException(404,"Inventory item not found")

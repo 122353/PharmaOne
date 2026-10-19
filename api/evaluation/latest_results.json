@@ -1,0 +1,588 @@
+{
+  "dataset": "PharmaOne synthetic matcher v2",
+  "measured_at_utc": "2026-10-19T09:39:22.324001+00:00",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "python_version": "3.11.9",
+  "pipelines": {
+    "rules": {
+      "runtime": {
+        "cases": 24,
+        "total_seconds": 0.014402400000108173,
+        "mean_latency_ms": 0.5965166665191646,
+        "p95_latency_ms": 0.6548000001203036,
+        "python_heap_peak_kib": 23.61328125,
+        "rss_before_mib": 17.1,
+        "rss_after_mib": 17.25
+      },
+      "classification_metrics": {
+        "determinate_count": 11,
+        "true_positive": 6,
+        "false_positive": 0,
+        "false_negative": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ambiguous_predicted_positive": 0
+      },
+      "retrieval_metrics": {
+        "determinate_count": 14,
+        "true_positive": 6,
+        "false_positive": 0,
+        "false_negative": 3,
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "f1": 0.8,
+        "ambiguous_predicted_positive": 9
+      },
+      "predictions": {
+        "p1_exact_linezolid": {
+          "status": "potential_match",
+          "potential": true,
+          "retrieved": true,
+          "semantic": null
+        },
+        "p2_spacing_variant": {
+          "status": "potential_match",
+          "potential": true,
+          "retrieved": true,
+          "semantic": null
+        },
+        "p3_mass_conversion": {
+          "status": "potential_match",
+          "potential": true,
+          "retrieved": true,
+          "semantic": null
+        },
+        "p4_concentration_conversion": {
+          "status": "potential_match",
+          "potential": true,
+          "retrieved": true,
+          "semantic": null
+        },
+        "p5_combination": {
+          "status": "potential_match",
+          "potential": true,
+          "retrieved": true,
+          "semantic": null
+        },
+        "p6_manufacturer_address": {
+          "status": "potential_match",
+          "potential": true,
+          "retrieved": true,
+          "semantic": null
+        },
+        "n1_wrong_batch": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": null
+        },
+        "n2_different_ingredient": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": null
+        },
+        "n3_different_form": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": null
+        },
+        "n4_different_release": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": null
+        },
+        "n5_different_combination": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": null
+        },
+        "a1_wrong_strength": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a2_missing_batch": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a3_missing_manufacturer": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a4_name_field_conflict": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a5_maker_conflict": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a6_one_sided_missing_strength": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a7_unknown_brand_alias": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": null
+        },
+        "v1_linezolid_ocr": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": null
+        },
+        "v2_paracetamol_ocr": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": null
+        },
+        "v3_combination_spacing": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": null
+        },
+        "a8_both_missing_strength": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a9_both_missing_form": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a10_missing_name": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        }
+      }
+    },
+    "pharmamatch_only": {
+      "runtime": {
+        "cases": 24,
+        "total_seconds": 0.009533400001600967,
+        "mean_latency_ms": 0.39558749995194376,
+        "p95_latency_ms": 0.4976999989594333,
+        "python_heap_peak_kib": 10.83984375,
+        "rss_before_mib": 17.26,
+        "rss_after_mib": 17.35
+      },
+      "classification_metrics": {
+        "determinate_count": 11,
+        "true_positive": 2,
+        "false_positive": 1,
+        "false_negative": 4,
+        "precision": 0.6666666666666666,
+        "recall": 0.3333333333333333,
+        "f1": 0.4444444444444444,
+        "ambiguous_predicted_positive": 5
+      },
+      "retrieval_metrics": {
+        "determinate_count": 14,
+        "true_positive": 2,
+        "false_positive": 1,
+        "false_negative": 7,
+        "precision": 0.6666666666666666,
+        "recall": 0.2222222222222222,
+        "f1": 0.3333333333333333,
+        "ambiguous_predicted_positive": 5
+      },
+      "predictions": {
+        "p1_exact_linezolid": {
+          "score": 0.9982,
+          "potential": true,
+          "retrieved": true
+        },
+        "p2_spacing_variant": {
+          "score": 0.0001,
+          "potential": false,
+          "retrieved": false
+        },
+        "p3_mass_conversion": {
+          "score": 0.0001,
+          "potential": false,
+          "retrieved": false
+        },
+        "p4_concentration_conversion": {
+          "score": 0.0003,
+          "potential": false,
+          "retrieved": false
+        },
+        "p5_combination": {
+          "score": 0.0002,
+          "potential": false,
+          "retrieved": false
+        },
+        "p6_manufacturer_address": {
+          "score": 0.9982,
+          "potential": true,
+          "retrieved": true
+        },
+        "n1_wrong_batch": {
+          "score": 0.9982,
+          "potential": true,
+          "retrieved": true
+        },
+        "n2_different_ingredient": {
+          "score": 0.0449,
+          "potential": false,
+          "retrieved": false
+        },
+        "n3_different_form": {
+          "score": 0.0417,
+          "potential": false,
+          "retrieved": false
+        },
+        "n4_different_release": {
+          "score": 0.0656,
+          "potential": false,
+          "retrieved": false
+        },
+        "n5_different_combination": {
+          "score": 0.0007,
+          "potential": false,
+          "retrieved": false
+        },
+        "a1_wrong_strength": {
+          "score": 0.0004,
+          "potential": false,
+          "retrieved": false
+        },
+        "a2_missing_batch": {
+          "score": 0.9982,
+          "potential": true,
+          "retrieved": true
+        },
+        "a3_missing_manufacturer": {
+          "score": 0.9982,
+          "potential": true,
+          "retrieved": true
+        },
+        "a4_name_field_conflict": {
+          "score": 0.0004,
+          "potential": false,
+          "retrieved": false
+        },
+        "a5_maker_conflict": {
+          "score": 0.9982,
+          "potential": true,
+          "retrieved": true
+        },
+        "a6_one_sided_missing_strength": {
+          "score": 0.0471,
+          "potential": false,
+          "retrieved": false
+        },
+        "a7_unknown_brand_alias": {
+          "score": 0.0136,
+          "potential": false,
+          "retrieved": false
+        },
+        "v1_linezolid_ocr": {
+          "score": 0.0318,
+          "potential": false,
+          "retrieved": false
+        },
+        "v2_paracetamol_ocr": {
+          "score": 0.0002,
+          "potential": false,
+          "retrieved": false
+        },
+        "v3_combination_spacing": {
+          "score": 0.0001,
+          "potential": false,
+          "retrieved": false
+        },
+        "a8_both_missing_strength": {
+          "score": 0.9977,
+          "potential": true,
+          "retrieved": true
+        },
+        "a9_both_missing_form": {
+          "score": 0.9982,
+          "potential": true,
+          "retrieved": true
+        },
+        "a10_missing_name": {
+          "score": 0.0183,
+          "potential": false,
+          "retrieved": false
+        }
+      },
+      "threshold": 0.5
+    },
+    "minilm_enhanced": {
+      "runtime": {
+        "cases": 24,
+        "total_seconds": 0.011198599999261205,
+        "mean_latency_ms": 0.46404999966398464,
+        "p95_latency_ms": 0.7695999993302394,
+        "python_heap_peak_kib": 7.9208984375,
+        "rss_before_mib": 527.57,
+        "rss_after_mib": 527.57
+      },
+      "classification_metrics": {
+        "determinate_count": 11,
+        "true_positive": 6,
+        "false_positive": 0,
+        "false_negative": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ambiguous_predicted_positive": 0
+      },
+      "retrieval_metrics": {
+        "determinate_count": 14,
+        "true_positive": 9,
+        "false_positive": 0,
+        "false_negative": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "ambiguous_predicted_positive": 10
+      },
+      "predictions": {
+        "p1_exact_linezolid": {
+          "status": "potential_match",
+          "potential": true,
+          "retrieved": true,
+          "semantic": null
+        },
+        "p2_spacing_variant": {
+          "status": "potential_match",
+          "potential": true,
+          "retrieved": true,
+          "semantic": null
+        },
+        "p3_mass_conversion": {
+          "status": "potential_match",
+          "potential": true,
+          "retrieved": true,
+          "semantic": null
+        },
+        "p4_concentration_conversion": {
+          "status": "potential_match",
+          "potential": true,
+          "retrieved": true,
+          "semantic": null
+        },
+        "p5_combination": {
+          "status": "potential_match",
+          "potential": true,
+          "retrieved": true,
+          "semantic": null
+        },
+        "p6_manufacturer_address": {
+          "status": "potential_match",
+          "potential": true,
+          "retrieved": true,
+          "semantic": null
+        },
+        "n1_wrong_batch": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": null
+        },
+        "n2_different_ingredient": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": {
+            "model": "all-MiniLM-L6-v2",
+            "semantic_similarity": 0.6622,
+            "threshold_role": "candidate_retrieval_only",
+            "advisory_only": true
+          }
+        },
+        "n3_different_form": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": null
+        },
+        "n4_different_release": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": null
+        },
+        "n5_different_combination": {
+          "status": "no_identified_match",
+          "potential": false,
+          "retrieved": false,
+          "semantic": null
+        },
+        "a1_wrong_strength": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a2_missing_batch": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a3_missing_manufacturer": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a4_name_field_conflict": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a5_maker_conflict": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a6_one_sided_missing_strength": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a7_unknown_brand_alias": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": {
+            "model": "all-MiniLM-L6-v2",
+            "semantic_similarity": 0.704,
+            "threshold_role": "candidate_retrieval_only",
+            "advisory_only": true,
+            "candidate_retrieved": true
+          }
+        },
+        "v1_linezolid_ocr": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": {
+            "model": "all-MiniLM-L6-v2",
+            "semantic_similarity": 0.9423,
+            "threshold_role": "candidate_retrieval_only",
+            "advisory_only": true,
+            "candidate_retrieved": true
+          }
+        },
+        "v2_paracetamol_ocr": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": {
+            "model": "all-MiniLM-L6-v2",
+            "semantic_similarity": 0.8627,
+            "threshold_role": "candidate_retrieval_only",
+            "advisory_only": true,
+            "candidate_retrieved": true
+          }
+        },
+        "v3_combination_spacing": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": {
+            "model": "all-MiniLM-L6-v2",
+            "semantic_similarity": 0.8745,
+            "threshold_role": "candidate_retrieval_only",
+            "advisory_only": true,
+            "candidate_retrieved": true
+          }
+        },
+        "a8_both_missing_strength": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a9_both_missing_form": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        },
+        "a10_missing_name": {
+          "status": "needs_verification",
+          "potential": false,
+          "retrieved": true,
+          "semantic": null
+        }
+      },
+      "available": true,
+      "availability": {
+        "available": true,
+        "model": "sentence-transformers/all-MiniLM-L6-v2",
+        "local_files_only": true
+      },
+      "model_load_seconds": 24.833330299999943,
+      "rss_before_load_mib": 17.35,
+      "rss_after_load_mib": 519.75,
+      "cold_matching_runtime": {
+        "cases": 24,
+        "total_seconds": 0.3801178000012442,
+        "mean_latency_ms": 15.834279166635193,
+        "p95_latency_ms": 80.78199999908975,
+        "python_heap_peak_kib": 141.6005859375,
+        "rss_before_mib": 519.75,
+        "rss_after_mib": 527.57
+      },
+      "candidate_retrievals_needing_verification": 4,
+      "cold_encoding_runtime": {
+        "cases": 24,
+        "total_seconds": 0.7138635999999678,
+        "mean_latency_ms": 29.736679166793085,
+        "p95_latency_ms": 69.58540000050562,
+        "python_heap_peak_kib": 294.6845703125,
+        "rss_before_mib": 527.57,
+        "rss_after_mib": 528.59
+      },
+      "warm_encoding_runtime": {
+        "cases": 24,
+        "total_seconds": 0.0028323999995336635,
+        "mean_latency_ms": 0.11582499989041632,
+        "p95_latency_ms": 0.17869999828690197,
+        "python_heap_peak_kib": 1.6015625,
+        "rss_before_mib": 528.59,
+        "rss_after_mib": 528.59
+      },
+      "embedding_cache": {
+        "hits": 71,
+        "misses": 21,
+        "maxsize": 1024,
+        "currsize": 21
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from uuid import uuid4
-from sqlalchemy import String, Text, Integer, DateTime, ForeignKey, UniqueConstraint, JSON, LargeBinary
+from sqlalchemy import String, Text, Integer, DateTime, ForeignKey, UniqueConstraint, JSON, LargeBinary, Boolean, Index
 from sqlalchemy.orm import Mapped, mapped_column
 from .db import Base
 
@@ -154,9 +154,51 @@ class IngestionRun(Base):
     requesting_user_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     connection_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     provider_run_id: Mapped[str] = mapped_column(String(100), default="")
+    provider_run_url: Mapped[str] = mapped_column(String(500), default="")
+    source_kind: Mapped[str] = mapped_column(String(32), default="unknown")
+    retrieval_metadata: Mapped[dict] = mapped_column(JSON, default=dict)
     period: Mapped[str] = mapped_column(String(20))
     status: Mapped[str] = mapped_column(String(24), default="running")
     error: Mapped[str] = mapped_column(String(300), default="")
     record_count: Mapped[int] = mapped_column(Integer, default=0)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+class MonitoringNotification(Base):
+    __tablename__ = "monitoring_notifications"
+    __table_args__ = (
+        UniqueConstraint(
+            "pharmacy_id",
+            "event_id",
+            name="uq_monitoring_notification_event",
+        ),
+        Index(
+            "ix_monitoring_notifications_pharmacy_active_created",
+            "pharmacy_id", "is_active", "created_at",
+        ),
+        Index(
+            "ix_monitoring_notifications_pharmacy_unread_active",
+            "pharmacy_id", "is_active", "is_read",
+        ),
+    )
+
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=uid
+    )
+    pharmacy_id: Mapped[str] = mapped_column(
+        ForeignKey("pharmacies.id"), index=True
+    )
+    event_id: Mapped[str] = mapped_column(String(64))
+    inventory_id: Mapped[str] = mapped_column(
+        ForeignKey("inventory_items.id")
+    )
+    alert_id: Mapped[str] = mapped_column(
+        ForeignKey("regulatory_alerts.fingerprint")
+    )
+    status: Mapped[str] = mapped_column(String(32))
+    title: Mapped[str] = mapped_column(String(255))
+    message: Mapped[str] = mapped_column(Text, default="")
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=now
+    )

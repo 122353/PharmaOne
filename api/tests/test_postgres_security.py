@@ -7,7 +7,7 @@ from app.db import engine
 
 @pytest.mark.skipif(os.getenv("PHARMAONE_TEST_POSTGRES") != "1" or engine.dialect.name != "postgresql", reason="Requires configured PostgreSQL")
 def test_supabase_client_roles_have_no_direct_table_access():
-    tables = ("pharmacies", "inventory_items", "inventory_alert_matches", "investigations", "audit_events", "tinyfish_connections", "ingestion_runs", "regulatory_alerts", "alert_versions", "supplier_links", "inventory_imports", "investigation_attachments")
+    tables = ("pharmacies", "inventory_items", "inventory_alert_matches", "investigations", "audit_events", "tinyfish_connections", "ingestion_runs", "regulatory_alerts", "alert_versions", "supplier_links", "inventory_imports", "investigation_attachments", "monitoring_notifications")
     with engine.connect() as connection:
         for table in tables:
             enabled = connection.scalar(text("select relrowsecurity from pg_class where oid = to_regclass(:table)"), {"table": "public." + table})
