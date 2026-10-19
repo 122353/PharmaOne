@@ -83,8 +83,8 @@ def sync_once(db: Session, key: str, period: str, limit: int = 10, *, provider=r
               method: str = "operator_tinyfish", started_at: datetime | None = None) -> IngestionRun:
     if not key:
         raise RuntimeError("TINYFISH_API_KEY is not configured")
-    if not re.fullmatch(r"(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-20\d\d", period):
-        raise ValueError("Period must be MON-YYYY")
+    if period != "LATEST" and not re.fullmatch(r"(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-20\d\d", period):
+        raise ValueError("Period must be MON-YYYY or LATEST")
     if not 1 <= limit <= 25:
         raise ValueError("Limit must be 1 to 25")
     if max_requests not in (1, 2):
@@ -155,7 +155,7 @@ def sync_once(db: Session, key: str, period: str, limit: int = 10, *, provider=r
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("period", help="CDSCO reporting period, e.g. AUG-2026")
+    parser.add_argument("period", help="CDSCO reporting period, e.g. AUG-2026, or LATEST")
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--max-requests", type=int, choices=(1, 2), default=1)
     args = parser.parse_args()
