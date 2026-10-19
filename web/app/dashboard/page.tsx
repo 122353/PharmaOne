@@ -9,17 +9,36 @@ import {useLanguage} from '@/lib/language';
 export default function Page() {
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState('');
+  const [rechecking, setRechecking] = useState(false);
+  const [recheckFeedback, setRecheckFeedback] = useState('');
   const {language} = useLanguage();
   const t = (en: string, hi: string) => language === 'hi' ? hi : en;
   useEffect(() => { api<Dashboard>('/api/dashboard').then(setData).catch(error => setError(String(error))); }, []);
+  async function recheckSavedInventory() {
+    if (rechecking) return;
+    setRechecking(true);
+    setRecheckFeedback('');
+    setError('');
+    try {
+      await api<{matches: number}>('/api/matches/recheck', {method: 'POST'});
+      const updated = await api<Dashboard>('/api/dashboard');
+      setData(updated);
+      setRecheckFeedback(t('Saved inventory rechecked against stored evidence. Open notifications to review any new events.', 'सहेजी गई इन्वेंटरी को उपलब्ध प्रमाण से दोबारा मिलाया गया। नई सूचनाएँ देखने के लिए घंटी खोलें।'));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setRechecking(false);
+    }
+  }
 
   return <AppShell>
     <div className="page-head"><div>
       <span className="page-kicker">{t('Pharmacy / Overview', 'फार्मेसी / अवलोकन')}</span>
       <h1>{data?.pharmacy || t('Your pharmacy', 'आपकी फार्मेसी')}</h1>
       <p>{t('Your batch-level review workspace. Evidence is only as current as the last successful source check.', 'बैच स्तर पर समीक्षा का आपका कार्यक्षेत्र। प्रमाण केवल आखिरी सफल स्रोत जाँच तक अद्यतन हैं।')}</p>
-    </div><Link className="secondary" href="/onboarding/inventory">{t('Import inventory', 'इन्वेंटरी आयात करें')}</Link></div>
+    </div><div className="toolbar"><button type="button" className="secondary" disabled={rechecking || !data} onClick={() => void recheckSavedInventory()}>{rechecking ? t('Rechecking…', 'दोबारा जाँच जारी…') : t('Recheck saved inventory', 'सहेजी इन्वेंटरी फिर जाँचें')}</button><Link className="secondary" href="/onboarding/inventory">{t('Import inventory', 'इन्वेंटरी आयात करें')}</Link></div></div>
     {error && <div className="notice error" role="alert">{language === 'hi' && /Failed to fetch/i.test(error) ? 'सर्वर से संपर्क नहीं हो पाया।' : error} <Link href="/onboarding/pharmacy">{t('Set up pharmacy →', 'फार्मेसी सेट करें →')}</Link></div>}
+    {recheckFeedback && <div className="notice" role="status">{recheckFeedback}</div>}
     {!data && !error && <div className="state">{t('Loading your workspace…', 'आपका कार्यक्षेत्र लोड हो रहा है…')}</div>}
     {data && <>
     <NotificationBell initialUnreadCount={data.unread_notifications ?? 0} />
